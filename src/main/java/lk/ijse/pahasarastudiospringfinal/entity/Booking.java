@@ -21,7 +21,7 @@ public class Booking {
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private StudioService service;
+    private StudioServiceEntity service;
 
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Invoice invoice;

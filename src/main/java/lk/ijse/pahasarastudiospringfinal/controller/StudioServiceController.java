@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/admin/services")
 public class StudioServiceController {
+
     private final StudioService studioService;
 
+    // Spring will now correctly find StudioServiceImpl because it 'implements' the interface
     public StudioServiceController(StudioService studioService) {
         this.studioService = studioService;
     }
