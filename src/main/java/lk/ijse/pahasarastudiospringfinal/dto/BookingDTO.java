@@ -1,14 +1,17 @@
 package lk.ijse.pahasarastudiospringfinal.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class BookingDTO {
     private Long id;
-    private LocalDateTime dateTime;
+    private LocalDate bookingDate; // ✅ Ensure this matches the Service call
+    private String location;
     private String status;
-    private Long clientId;
-    private String clientName;
-    private Long serviceId;
+    private String clientEmail; // To link the client
 }
