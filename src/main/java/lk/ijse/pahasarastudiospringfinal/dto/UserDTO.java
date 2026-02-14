@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
-    private Long id;
+    private int userId; // Changed from 'id' to 'userId' to match Service logic
     private String username;
     private String password;
     private String email;
