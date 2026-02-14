@@ -1,28 +1,28 @@
 package lk.ijse.pahasarastudiospringfinal.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "bookings")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime dateTime;
-    private String status; // PENDING, CONFIRMED, CANCELLED
+    private LocalDate bookingDate;
+    private String location;
 
-    @ManyToOne
-    @JoinColumn(name = "client_id")
+    @Column(nullable = false)
+    private String status = "PENDING";
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "client_email", referencedColumnName = "email", nullable = false)
     private Client client;
-
-    @ManyToOne
-    @JoinColumn(name = "service_id")
-    private StudioServiceEntity service;
-
-    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
-    private Invoice invoice;
 }
