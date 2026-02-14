@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "studio_services")
+@Table(name = "services")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,7 +15,15 @@ public class StudioServiceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "service_name", nullable = false, unique = true) // ✅ FIXED MAPPING
     private String serviceName;
+
+    @Column(nullable = false)
     private double price;
+
+    @Column(length = 500)
     private String description;
+
+    @Column(nullable = false)
+    private String status = "ACTIVE";
 }
