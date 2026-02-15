@@ -1,0 +1,24 @@
+body { background-color: #f4f7f6; font-family: 'Poppins', sans-serif; }
+
+.main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+.tr-clickable { cursor: pointer; transition: 0.2s; }
+.tr-clickable:hover { background-color: #f1f8ff; }
+.selected-row { border-left: 5px solid #0d6efd !important; background-color: #f8f9fa !important; }
+.btn-action { width: 100px; font-weight: 600; font-size: 0.85rem; }
+
+.status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+.badge-available { background-color: #d1e7dd; color: #0f5132; }
+.badge-repairing { background-color: #fff3cd; color: #856404; }
+.badge-retired { background-color: #f8d7da; color: #842029; }
+
+.page-header {
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('img/header-bg.jpg');
+    background-position: center;
+    background-size: cover;
+    padding: 80px 0;
+    margin-bottom: 50px;
+}
+
+.navbar-brand h1 { font-weight: 700; letter-spacing: 1px; }
+.table thead { background-color: #212529; color: white; }
+.form-label { font-size: 0.9rem; color: #495057; }

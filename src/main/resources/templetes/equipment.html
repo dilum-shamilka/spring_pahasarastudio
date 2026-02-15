@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Pahasara Studio | Equipment Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/equipment.css">
+</head>
+
+<body>
+<!-- Top Info Bar -->
+<div class="container-fluid bg-light pt-2 d-none d-lg-block border-bottom">
+    <div class="container">
+        <div class="row small">
+            <div class="col-lg-6 text-muted">
+                <i class="fa fa-envelope me-2"></i>info@pahasarastudio.com
+                <span class="mx-3">|</span>
+                <i class="fa fa-phone-alt me-2"></i>+94 77 123 4567
+            </div>
+            <div class="col-lg-6 text-end">
+                <a class="text-primary px-2" href=""><i class="fab fa-facebook-f"></i></a>
+                <a class="text-primary px-2" href=""><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg bg-white navbar-light shadow-sm sticky-top py-3">
+    <div class="container">
+        <a href="index.html" class="navbar-brand">
+            <h1 class="m-0 text-primary"><span class="text-dark">PAHASARA</span>STUDIO</h1>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto">
+                <a href="index.html" class="nav-item nav-link">Home</a>
+                <a href="client.html" class="nav-item nav-link">Clients</a>
+                <a href="equipment.html" class="nav-item nav-link active">Equipment</a>
+                <a href="booking.html" class="nav-item nav-link">Bookings</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Page Header -->
+<div class="container-fluid page-header text-center">
+    <h3 class="display-5 text-white fw-bold text-uppercase">Inventory Management</h3>
+    <div class="d-inline-flex text-white-50">
+        <p class="m-0 text-uppercase"><a class="text-white-50 text-decoration-none" href="index.html">Home</a></p>
+        <i class="fa fa-angle-double-right pt-1 px-3"></i>
+        <p class="m-0 text-uppercase">Equipment</p>
+    </div>
+</div>
+
+<!-- Main Container -->
+<div class="container pb-5">
+    <div class="row g-4">
+        <!-- Equipment Form -->
+        <div class="col-lg-4">
+            <div class="card main-card">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0" id="formHeader">Equipment Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <input type="hidden" id="equipmentId">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Item Name</label>
+                        <input type="text" id="itemName" class="form-control" placeholder="e.g. Sony A7III" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Serial Number</label>
+                        <input type="text" id="serialNumber" class="form-control" placeholder="SN-XXXX" />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Current Status</label>
+                        <select id="status" class="form-select">
+                            <option value="AVAILABLE">Available</option>
+                            <option value="REPAIRING">Repairing</option>
+                            <option value="RETIRED">Retired</option>
+                        </select>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center border-top pt-4">
+                        <button class="btn btn-outline-secondary btn-action" id="btnClear">Clear</button>
+                        <button class="btn btn-success btn-action" id="btnSave">Save</button>
+                        <button class="btn btn-outline-danger btn-action" id="btnDelete">Delete</button>
+                        <button class="btn btn-primary btn-action" id="btnUpdate">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Table -->
+        <div class="col-lg-8">
+            <div class="card main-card overflow-hidden">
+                <div class="card-header bg-secondary text-white py-3">
+                    <h5 class="mb-0 text-uppercase small fw-bold">Studio Inventory List</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                        <tr class="text-center">
+                            <th class="ps-4">ID</th>
+                            <th>Equipment Name</th>
+                            <th>Serial No</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="equipmentTableBody" class="text-center"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="container-fluid bg-dark text-white-50 py-5 mt-5">
+    <div class="container text-center">
+        <h2 class="text-white mb-3">PAHASARA STUDIO</h2>
+        <p class="mb-0">Precision in every frame. Excellence in every tool.</p>
+    </div>
+</footer>
+
+<!-- JS Libraries -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom JS -->
+<script src="/static/js/equipment.js"></script>
+</body>
+</html>

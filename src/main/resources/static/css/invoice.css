@@ -1,0 +1,31 @@
+body {
+    background-color: #f4f7f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.main-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.btn-action {
+    width: 120px;
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.bg-paid {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.bg-unpaid {
+    background-color: #f8d7da;
+    color: #842029;
+}

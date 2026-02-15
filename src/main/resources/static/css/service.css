@@ -1,0 +1,83 @@
+/* ------------------------------
+   Body and General Page Styling
+---------------------------------*/
+body {
+    background-color: #f4f7f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ------------------------------
+   Card Styling
+---------------------------------*/
+.main-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* ------------------------------
+   Form Buttons
+---------------------------------*/
+.btn-action {
+    width: 110px; /* Standard width for Save/Reset buttons */
+}
+
+/* ------------------------------
+   Status Badge
+---------------------------------*/
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Status Colors */
+.bg-active {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.bg-inactive {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+/* ------------------------------
+   Table Styling
+---------------------------------*/
+table.table {
+    margin-bottom: 0;
+}
+
+table.table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    transition: background-color 0.2s;
+}
+
+table.table td, table.table th {
+    vertical-align: middle;
+}
+
+/* ------------------------------
+   Card Header Styling
+---------------------------------*/
+.card-header {
+    font-weight: 600;
+}
+
+/* ------------------------------
+   Responsive Fixes
+---------------------------------*/
+@media (max-width: 768px) {
+    .btn-action {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    .row.g-3 > .col-md-5,
+    .row.g-3 > .col-md-4,
+    .row.g-3 > .col-md-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}

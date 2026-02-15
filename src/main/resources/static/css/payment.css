@@ -1,0 +1,62 @@
+/* -----------------------------
+   Body & Font
+------------------------------*/
+body {
+    background-color: #f4f7f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* -----------------------------
+   Card
+------------------------------*/
+.main-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* -----------------------------
+   Form Buttons
+------------------------------*/
+.btn-action {
+    width: 110px;
+}
+
+/* -----------------------------
+   Payment Method Badge
+------------------------------*/
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.method-cash { background-color: #e3f2fd; color: #0d47a1; }
+.method-card { background-color: #f3e5f5; color: #4a148c; }
+.method-online { background-color: #e8f5e9; color: #1b5e20; }
+
+/* -----------------------------
+   Table Styling
+------------------------------*/
+.table thead th {
+    border-top: none;
+    background-color: #343a40;
+    color: white;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0,0,0,0.03);
+    transition: background-color 0.2s;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+/* -----------------------------
+   Responsive Fix
+------------------------------*/
+@media (max-width: 768px) {
+    .btn-action { width: 100%; margin-bottom: 5px; }
+}

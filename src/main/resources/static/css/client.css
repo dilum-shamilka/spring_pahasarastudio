@@ -1,0 +1,83 @@
+/* -----------------------------
+   Body & Font
+------------------------------*/
+body {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+}
+
+/* -----------------------------
+   Container
+------------------------------*/
+.main-container {
+    margin-top: 60px;
+    margin-bottom: 60px;
+}
+
+/* -----------------------------
+   Card
+------------------------------*/
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+/* -----------------------------
+   Form Inputs
+------------------------------*/
+.form-control {
+    border-radius: 10px;
+}
+
+/* -----------------------------
+   Buttons
+------------------------------*/
+.btn {
+    border-radius: 25px;
+    padding: 6px 20px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* -----------------------------
+   Table
+------------------------------*/
+.table thead {
+    background: linear-gradient(to right, #667eea, #764ba2);
+    color: white;
+}
+
+tr {
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* -----------------------------
+   Title Box
+------------------------------*/
+.title-box {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.title-box h2 {
+    font-weight: 700;
+}
