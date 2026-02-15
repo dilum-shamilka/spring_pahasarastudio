@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Invoice {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,9 +27,8 @@ public class Invoice {
     @Column(nullable = false)
     private double totalAmount;
 
-    // ✅ Rename to 'status' so Lombok generates getStatus() returning a String
     @Column(nullable = false)
-    private String status = "UNPAID";
+    private String status = "UNPAID"; // status stored in DB
 
     @OneToOne
     @JoinColumn(name = "booking_id", referencedColumnName = "id", nullable = false)
@@ -36,6 +36,4 @@ public class Invoice {
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Payment> payments;
-
-    // ❌ REMOVED: Manual getStatus() and setStatus() that caused the type conflict
 }

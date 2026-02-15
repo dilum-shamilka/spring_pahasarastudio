@@ -1,7 +1,6 @@
 package lk.ijse.pahasarastudiospringfinal.service.impl;
 
 import lk.ijse.pahasarastudiospringfinal.dto.InventoryDTO;
-import lk.ijse.pahasarastudiospringfinal.entity.Inventory;
 import lk.ijse.pahasarastudiospringfinal.repo.InventoryRepo;
 import lk.ijse.pahasarastudiospringfinal.service.InventoryService;
 import lk.ijse.pahasarastudiospringfinal.util.MappingUtil;
@@ -73,7 +72,8 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     // Standard bridges for other interface methods
-    @Override public InventoryDTO getItemById(int id) { return inventoryRepo.findById((long)id).map(mapper::toInventoryDTO).orElse(null); }
+    @Override
+    public InventoryDTO getItemById(int id) { return inventoryRepo.findById((long)id).map(mapper::toInventoryDTO).orElse(null); }
 
     @Override
     public String updateStock(Long id, int quantity) {

@@ -11,21 +11,22 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Inventory {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String itemName;
 
     @Column(nullable = false)
     private int quantity;
 
-    private String unit; // e.g., "Rolls", "Box"
+    private String unit;
 
     @Column(nullable = false)
     private int reorderLevel;
 
     @Column(nullable = false)
-    private String status = "IN_STOCK"; // Added to match the status pattern in your samples
+    private String status; // IN_STOCK, LOW_STOCK, OUT_OF_STOCK
 }
