@@ -227,8 +227,8 @@ public class MappingUtil {
     }
 
     // ============================================================
-    // EQUIPMENT MAPPINGS
-    // ============================================================
+// EQUIPMENT MAPPINGS
+// ============================================================
 
     public EquipmentDTO toEquipmentDTO(Equipment entity) {
         if (entity == null) return null;
@@ -236,7 +236,7 @@ public class MappingUtil {
         return new EquipmentDTO(
                 entity.getId(),
                 entity.getItemName(),
-                null,
+                null,               // category can be added if needed
                 entity.getSerialNumber(),
                 entity.getStatus()
         );
@@ -258,9 +258,7 @@ public class MappingUtil {
         return entity;
     }
 
-    // ============================================================
-    // CLIENT MAPPINGS
-    // ============================================================
+    // ================= CLIENT MAPPINGS =================
 
     public ClientDTO toClientDTO(Client entity) {
         if (entity == null) return null;
@@ -279,14 +277,14 @@ public class MappingUtil {
 
         Client entity = new Client();
 
-        if (dto.getId() != null && dto.getId() != 0) {
+        if (dto.getId() != null) {
             entity.setId(dto.getId());
         }
 
-        entity.setFullName(dto.getName() != null ? dto.getName() : "");
-        entity.setEmail(dto.getEmail() != null ? dto.getEmail() : "");
-        entity.setPhoneNumber(dto.getContactNumber() != null ? dto.getContactNumber() : "");
-        entity.setAddress(dto.getAddress() != null ? dto.getAddress() : "");
+        entity.setFullName(dto.getName());
+        entity.setEmail(dto.getEmail());
+        entity.setPhoneNumber(dto.getContactNumber());
+        entity.setAddress(dto.getAddress());
 
         return entity;
     }

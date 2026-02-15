@@ -12,12 +12,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Equipment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String itemName;
+
     private String serialNumber;
 
     @Column(nullable = false)
@@ -25,5 +27,5 @@ public class Equipment {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "equipment_images", joinColumns = @JoinColumn(name = "equipment_id"))
-    private List<String> equipmentImages; // Stores paths like your Vehicle sample
+    private List<String> equipmentImages;
 }

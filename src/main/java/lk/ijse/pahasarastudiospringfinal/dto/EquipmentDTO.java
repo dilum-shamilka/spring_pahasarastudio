@@ -12,5 +12,5 @@ public class EquipmentDTO {
     private String itemName;
     private String category;    // Camera, Lens, Lighting
     private String serialNumber;
-    private String status;      // AVAILABLE, IN_USE, REPAIRING
+    private String status;      // AVAILABLE, REPAIRING, RETIRED
 }

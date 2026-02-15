@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Table(name = "clients")
 @Data
@@ -15,7 +17,6 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ REQUIRED: unique=true creates the index needed for the Foreign Key
     @Column(unique = true, nullable = false)
     private String email;
 
@@ -26,4 +27,8 @@ public class Client {
     private String phoneNumber;
 
     private String address;
+
+    // Link to bookings
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Booking> bookings; // bookings that reference this client
 }

@@ -17,6 +17,5 @@ public interface EquipmentRepo extends JpaRepository<Equipment, Long> {
 
     List<Equipment> findByItemNameContainingIgnoreCase(String itemName);
 
-    // ✅ Added: Useful for dashboard statistics
     long countByStatus(String status);
 }

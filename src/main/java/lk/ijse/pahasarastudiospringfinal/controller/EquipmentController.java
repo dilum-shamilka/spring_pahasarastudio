@@ -7,7 +7,6 @@ import lk.ijse.pahasarastudiospringfinal.util.VarList;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -21,7 +20,6 @@ public class EquipmentController {
         this.equipmentService = equipmentService;
     }
 
-    // --- SAVE EQUIPMENT ---
     @PostMapping("/save")
     public ResponseEntity<ResponseDTO> saveEquipment(@RequestBody EquipmentDTO equipmentDTO) {
         try {
@@ -39,7 +37,6 @@ public class EquipmentController {
         }
     }
 
-    // --- UPDATE EQUIPMENT ---
     @PutMapping("/update")
     public ResponseEntity<ResponseDTO> updateEquipment(@RequestBody EquipmentDTO equipmentDTO) {
         try {
@@ -60,12 +57,11 @@ public class EquipmentController {
         }
     }
 
-    // --- GET ALL ---
     @GetMapping("/getAll")
     public ResponseEntity<ResponseDTO> getAllEquipment() {
         try {
             List<EquipmentDTO> equipmentList = equipmentService.getAllEquipment();
-            if (equipmentList != null && !equipmentList.isEmpty()) {
+            if (!equipmentList.isEmpty()) {
                 return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Success", equipmentList));
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -77,9 +73,8 @@ public class EquipmentController {
         }
     }
 
-    // --- DELETE ---
     @DeleteMapping("/delete/{equipmentID}")
-    public ResponseEntity<ResponseDTO> deleteEquipment(@PathVariable int equipmentID) {
+    public ResponseEntity<ResponseDTO> deleteEquipment(@PathVariable Long equipmentID) {
         try {
             String res = equipmentService.deleteEquipment(equipmentID);
             if (res.equals(VarList.RSP_SUCCESS)) {

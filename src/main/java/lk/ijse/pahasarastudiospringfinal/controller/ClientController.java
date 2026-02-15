@@ -23,57 +23,51 @@ public class ClientController {
 
     @PostMapping("/save")
     public ResponseEntity<ResponseDTO> saveClient(@RequestBody ClientDTO clientDTO) {
-        try {
-            String res = clientService.saveClient(clientDTO);
-            if (res.equals(VarList.RSP_SUCCESS)) {
-                return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(new ResponseDTO(VarList.RSP_SUCCESS, "Client Registered Successfully", clientDTO));
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseDTO(VarList.RSP_DUPLICATED, "Email Already Exists", null));
-            }
-        } catch (Exception e) {
+        String res = clientService.saveClient(clientDTO);
+
+        if (res.equals(VarList.RSP_SUCCESS)) {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ResponseDTO(VarList.RSP_SUCCESS, "Client Registered Successfully", clientDTO));
+        } else if (res.equals(VarList.RSP_DUPLICATED)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDTO(VarList.RSP_DUPLICATED, "Email Already Exists", null));
+        } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
+                    .body(new ResponseDTO(VarList.RSP_ERROR, "Something Went Wrong", null));
         }
     }
 
     @PutMapping("/update")
     public ResponseEntity<ResponseDTO> updateClient(@RequestBody ClientDTO clientDTO) {
-        try {
-            String res = clientService.updateClient(clientDTO);
-            if (res.equals(VarList.RSP_SUCCESS)) {
-                return ResponseEntity.status(HttpStatus.ACCEPTED)
-                        .body(new ResponseDTO(VarList.RSP_SUCCESS, "Client Updated Successfully", clientDTO));
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "Client Not Found", null));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
+        String res = clientService.updateClient(clientDTO);
+
+        if (res.equals(VarList.RSP_SUCCESS)) {
+            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Client Updated Successfully", clientDTO));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "Client Not Found", null));
         }
     }
 
-    @DeleteMapping("/delete/{clientId}")
-    public ResponseEntity<ResponseDTO> deleteClient(@PathVariable Long clientId) {
-        try {
-            String res = clientService.deleteClient(clientId);
-            if (res.equals(VarList.RSP_SUCCESS)) {
-                return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Deleted", null));
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "Not Found", null));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ResponseDTO> deleteClient(@PathVariable Long id) {
+        String res = clientService.deleteClient(id);
+
+        if (res.equals(VarList.RSP_SUCCESS)) {
+            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Client Deleted Successfully", null));
+        } else if (res.equals(VarList.RSP_FOREIGN_KEY_VIOLATION)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDTO(VarList.RSP_FOREIGN_KEY_VIOLATION,
+                            "Cannot delete client with active bookings", null));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "Client Not Found", null));
         }
     }
 
     @GetMapping("/getAll")
     public ResponseEntity<ResponseDTO> getAllClients() {
-        List<ClientDTO> clients = clientService.getAllClients();
-        return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Success", clients));
+        List<ClientDTO> list = clientService.getAllClients();
+        return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Success", list));
     }
 }
