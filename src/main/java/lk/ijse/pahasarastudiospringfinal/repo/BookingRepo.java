@@ -10,22 +10,11 @@ import java.util.List;
 @Repository
 public interface BookingRepo extends JpaRepository<Booking, Long> {
 
-    // ✅ FIXED: Changed DateTime to BookingDate
-    boolean existsByBookingDate(LocalDate bookingDate);
+    boolean existsByBookingDateAndLocation(LocalDate bookingDate, String location);
 
-    // ✅ FIXED: Changed DateTime to BookingDate
-    List<Booking> findAllByBookingDate(LocalDate date);
+    List<Booking> findByBookingDate(LocalDate bookingDate);
 
-    // ✅ Standardized status search
-    List<Booking> findAllByStatus(String status);
+    List<Booking> findByClient_Email(String email);
 
-    long countByStatus(String status);
-
-    boolean existsByBookingDateAndLocation(LocalDate date, String location);
-
-    // ✅ Note: This requires a 'client' property in Booking and 'email' in Client
-    List<Booking> findByClientEmail(String email);
-
-    // ✅ Use this if you want to find bookings for a specific day
-    List<Booking> findByBookingDate(LocalDate date);
+    List<Booking> findByStatus(String status);
 }

@@ -21,79 +21,65 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    // --- SAVE / NEW BOOKING ---
     @PostMapping("/save")
-    public ResponseEntity<ResponseDTO> saveBooking(@RequestBody BookingDTO bookingDTO) {
-        try {
-            String res = bookingService.saveBooking(bookingDTO);
-            if (res.equals(VarList.RSP_SUCCESS)) {
+    public ResponseEntity<ResponseDTO> saveBooking(@RequestBody BookingDTO dto) {
+        String res = bookingService.saveBooking(dto);
+        switch (res) {
+            case VarList.RSP_SUCCESS:
                 return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(new ResponseDTO(VarList.RSP_SUCCESS, "Booking Saved Successfully", bookingDTO));
-            } else if (res.equals(VarList.RSP_DUPLICATED)) {
+                        .body(new ResponseDTO(res, "Booking Saved Successfully", dto));
+            case VarList.RSP_DUPLICATED:
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseDTO(VarList.RSP_DUPLICATED, "Slot Already Booked", null));
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseDTO(VarList.RSP_ERROR, "Failed to Create Booking", null));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
+                        .body(new ResponseDTO(res, "Slot Already Booked", null));
+            case VarList.RSP_NO_DATA_FOUND:
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ResponseDTO(res, "Client Not Found", null));
+            default:
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ResponseDTO(VarList.RSP_ERROR, "Failed to Save Booking", null));
         }
     }
 
-    // --- UPDATE BOOKING (Reschedule) ---
     @PutMapping("/update")
-    public ResponseEntity<ResponseDTO> updateBooking(@RequestBody BookingDTO bookingDTO) {
-        try {
-            String res = bookingService.updateBooking(bookingDTO);
-            if (res.equals(VarList.RSP_SUCCESS)) {
+    public ResponseEntity<ResponseDTO> updateBooking(@RequestBody BookingDTO dto) {
+        String res = bookingService.updateBooking(dto);
+        switch (res) {
+            case VarList.RSP_SUCCESS:
                 return ResponseEntity.status(HttpStatus.ACCEPTED)
-                        .body(new ResponseDTO(VarList.RSP_SUCCESS, "Booking Rescheduled Successfully", bookingDTO));
-            } else if (res.equals(VarList.RSP_NO_DATA_FOUND)) {
+                        .body(new ResponseDTO(res, "Booking Updated Successfully", dto));
+            case VarList.RSP_NO_DATA_FOUND:
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "Booking Not Found", null));
-            } else {
+                        .body(new ResponseDTO(res, "Booking or Client Not Found", null));
+            default:
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ResponseDTO(VarList.RSP_ERROR, "Update Failed", null));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
         }
     }
 
-    // --- GET ALL (Schedule View) ---
     @GetMapping("/getAll")
     public ResponseEntity<ResponseDTO> getAllBookings() {
-        try {
-            List<BookingDTO> bookings = bookingService.getAllBookings();
-            if (bookings != null && !bookings.isEmpty()) {
-                return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Schedule Retrieved", bookings));
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "No Bookings Found", null));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
-        }
+        List<BookingDTO> list = bookingService.getAllBookings();
+        if (list.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "No Bookings Found", null));
+        return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Bookings Retrieved", list));
     }
 
-    // --- DELETE / CANCEL ---
-    @DeleteMapping("/delete/{bookingID}")
-    public ResponseEntity<ResponseDTO> deleteBooking(@PathVariable Long bookingID) {
-        try {
-            String res = bookingService.deleteBooking(bookingID);
-            if (res.equals(VarList.RSP_SUCCESS)) {
-                return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Booking Cancelled", null));
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "Booking ID Not Found", null));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
-        }
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ResponseDTO> deleteBooking(@PathVariable Long id) {
+        String res = bookingService.deleteBooking(id);
+        if (res.equals(VarList.RSP_SUCCESS))
+            return ResponseEntity.ok(new ResponseDTO(res, "Booking Cancelled", null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ResponseDTO(res, "Booking ID Not Found", null));
+    }
+
+    @PutMapping("/status/{id}")
+    public ResponseEntity<ResponseDTO> updateStatus(@PathVariable Long id, @RequestParam String status) {
+        String res = bookingService.updateBookingStatus(id, status);
+        if (res.equals(VarList.RSP_SUCCESS))
+            return ResponseEntity.ok(new ResponseDTO(res, "Booking Status Updated", null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ResponseDTO(res, "Booking ID Not Found", null));
     }
 }

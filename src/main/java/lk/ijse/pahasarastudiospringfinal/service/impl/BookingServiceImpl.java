@@ -31,77 +31,39 @@ public class BookingServiceImpl implements BookingService {
     private MappingUtil mapper;
 
     @Override
-    public String saveBooking(BookingDTO bookingDTO) {
-        // PRE-VALIDATION: Check if client exists to prevent transaction rollback
-        Optional<Client> clientOpt = clientRepo.findByEmail(bookingDTO.getClientEmail());
-        if (clientOpt.isEmpty()) {
-            return VarList.RSP_NO_DATA_FOUND;
-        }
+    public String saveBooking(BookingDTO dto) {
+        Optional<Client> clientOpt = clientRepo.findByEmail(dto.getClientEmail());
+        if (clientOpt.isEmpty()) return VarList.RSP_NO_DATA_FOUND;
 
-        // Check for double booking (Optional business logic)
-        if (bookingRepo.existsByBookingDateAndLocation(bookingDTO.getBookingDate(), bookingDTO.getLocation())) {
+        if (bookingRepo.existsByBookingDateAndLocation(dto.getBookingDate(), dto.getLocation()))
             return VarList.RSP_DUPLICATED;
-        }
 
-        bookingRepo.save(mapper.toBookingEntity(bookingDTO, clientOpt.get()));
+        bookingRepo.save(mapper.toBookingEntity(dto, clientOpt.get()));
         return VarList.RSP_SUCCESS;
     }
 
     @Override
-    public String updateBooking(BookingDTO bookingDTO) {
-        // 1. Check if Booking ID is valid
-        if (bookingDTO.getId() == null || !bookingRepo.existsById(bookingDTO.getId())) {
+    public String updateBooking(BookingDTO dto) {
+        if (dto.getId() == null || !bookingRepo.existsById(dto.getId()))
             return VarList.RSP_NO_DATA_FOUND;
-        }
 
-        // 2. Validate Client existence
-        Optional<Client> clientOpt = clientRepo.findByEmail(bookingDTO.getClientEmail());
-        if (clientOpt.isEmpty()) {
-            return VarList.RSP_NO_DATA_FOUND;
-        }
+        Optional<Client> clientOpt = clientRepo.findByEmail(dto.getClientEmail());
+        if (clientOpt.isEmpty()) return VarList.RSP_NO_DATA_FOUND;
 
-        // 3. Save (JPA performs Update because ID is present in the Entity)
-        bookingRepo.save(mapper.toBookingEntity(bookingDTO, clientOpt.get()));
+        bookingRepo.save(mapper.toBookingEntity(dto, clientOpt.get()));
         return VarList.RSP_SUCCESS;
     }
 
     @Override
     public String deleteBooking(Long id) {
-        if (bookingRepo.existsById(id)) {
-            bookingRepo.deleteById(id);
-            return VarList.RSP_SUCCESS;
-        }
-        return VarList.RSP_NO_DATA_FOUND;
+        if (!bookingRepo.existsById(id)) return VarList.RSP_NO_DATA_FOUND;
+        bookingRepo.deleteById(id);
+        return VarList.RSP_SUCCESS;
     }
 
     @Override
-    public List<BookingDTO> getBookingsByDate(LocalDate date) {
-        return List.of();
-    }
-
-    @Override
-    public List<BookingDTO> getBookingsByClientEmail(String email) {
-        return List.of();
-    }
-
-    @Override
-    public List<BookingDTO> getBookingsByStatus(String status) {
-        return List.of();
-    }
-
-    @Override
-    public int getTotalBookingCount() {
-        return 0;
-    }
-
-    @Override
-    public void createBooking(BookingDTO dto) {
-
-    }
-
-    @Override
-    public void cancelBooking(Long id) {
-
+    public BookingDTO getBookingById(Long id) {
+        return bookingRepo.findById(id).map(mapper::toBookingDTO).orElse(null);
     }
 
     @Override
@@ -111,21 +73,45 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
-    // Bridges for Interface Compatibility
-    @Override public String deleteBooking(int id) { return deleteBooking((long) id); }
-    @Override public BookingDTO getBookingById(int id) { return getBookingById((long) id); }
-
     @Override
-    public String updateBookingStatus(int id, String status) {
-        return "";
+    public List<BookingDTO> getBookingsByDate(LocalDate date) {
+        return bookingRepo.findByBookingDate(date).stream()
+                .map(mapper::toBookingDTO)
+                .collect(Collectors.toList());
     }
 
-    @Override public BookingDTO getBookingById(Long id) { return bookingRepo.findById(id).map(mapper::toBookingDTO).orElse(null); }
+    @Override
+    public List<BookingDTO> getBookingsByClientEmail(String email) {
+        return bookingRepo.findByClient_Email(email).stream()
+                .map(mapper::toBookingDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BookingDTO> getBookingsByStatus(String status) {
+        return bookingRepo.findByStatus(status).stream()
+                .map(mapper::toBookingDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public int getTotalBookingCount() {
+        return (int) bookingRepo.count();
+    }
+
+    @Override
+    public void cancelBooking(Long id) {
+        if (bookingRepo.existsById(id)) bookingRepo.deleteById(id);
+    }
 
     @Override
     public String updateBookingStatus(Long id, String status) {
-        return "";
-    }
+        Optional<Booking> opt = bookingRepo.findById(id);
+        if (opt.isEmpty()) return VarList.RSP_NO_DATA_FOUND;
 
-    @Override public String updateBooking(Long id, BookingDTO dto) { dto.setId(id); return updateBooking(dto); }
+        Booking booking = opt.get();
+        booking.setStatus(status);
+        bookingRepo.save(booking);
+        return VarList.RSP_SUCCESS;
+    }
 }
