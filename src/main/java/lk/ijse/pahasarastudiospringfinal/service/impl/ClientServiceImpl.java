@@ -34,11 +34,10 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public String updateClient(ClientDTO clientDTO) {
-        // FIX: Verify ID exists to prevent 500 error
         if (clientDTO.getId() == null) return VarList.RSP_ERROR;
 
         if (clientRepo.existsById(clientDTO.getId())) {
-            // Check if email belongs to someone else (prevent duplicate constraint crash)
+            // MappingUtil must ensure the ID is set in the Entity
             clientRepo.save(mapper.toClientEntity(clientDTO));
             return VarList.RSP_SUCCESS;
         }
@@ -61,11 +60,16 @@ public class ClientServiceImpl implements ClientService {
         return VarList.RSP_NO_DATA_FOUND;
     }
 
-    // Standard bridges for Interface compatibility
+    // Bridge methods for interface compatibility
     @Override public String deleteClient(int id) { return deleteClient((long) id); }
     @Override public ClientDTO getClientById(int id) { return getClientById((long) id); }
-    @Override public ClientDTO getClientById(Long id) { return clientRepo.findById(id).map(mapper::toClientDTO).orElse(null); }
-    @Override public String updateClient(Long id, ClientDTO clientDTO) { clientDTO.setId(id); return updateClient(clientDTO); }
+    @Override public ClientDTO getClientById(Long id) {
+        return clientRepo.findById(id).map(mapper::toClientDTO).orElse(null);
+    }
+    @Override public String updateClient(Long id, ClientDTO clientDTO) {
+        clientDTO.setId(id);
+        return updateClient(clientDTO);
+    }
     @Override public int getTotalClientCount() { return (int) clientRepo.count(); }
     @Override public boolean existsByEmail(String email) { return clientRepo.existsByEmail(email); }
     @Override public ClientDTO getClientByEmail(String email) {
