@@ -12,31 +12,30 @@ public class MappingUtil {
     // ============================================================
     // USER MAPPINGS
     // ============================================================
-
     public UserDTO toUserDTO(User user) {
-        if (user == null) return null;
+        if(user == null) return null;
 
         return new UserDTO(
-                user.getId() != null ? user.getId().intValue() : 0,
+                user.getId(),
                 user.getUsername(),
-                null, // Never expose password
+                null, // never expose password
                 user.getEmail(),
-                user.getRole()
+                user.getRole() != null ? user.getRole() : "USER"
         );
     }
 
-    public User toUserEntity(UserDTO dto) {
-        if (dto == null) return null;
+    public User toUserEntity(UserDTO dto, String encodedPassword) {
+        if(dto == null) return null;
 
         User user = new User();
-
-        if (dto.getUserId() != 0) {
-            user.setId((long) dto.getUserId());
-        }
-
+        if(dto.getUserId() != null) user.setId(dto.getUserId());
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
-        user.setRole(dto.getRole());
+        user.setRole(dto.getRole() != null ? dto.getRole() : "USER");
+
+        if(encodedPassword != null && !encodedPassword.isEmpty()) {
+            user.setPassword(encodedPassword);
+        }
 
         return user;
     }

@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id") // Matches your MySQL bigint column exactly
-    private Long id;
+    private Long id;       // Must match DTO's userId
 
     @Column(unique = true, nullable = false)
     private String username;

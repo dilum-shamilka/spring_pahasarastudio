@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 public class ResponseDTO {
-    private String code;
-    private String message;
-    private Object content; // This holds your UserDTO, List, etc.
+    private String code;    // e.g., "00" success, "01" error
+    private String message; // descriptive message
+    private Object content; // UserDTO, username, etc.
 }

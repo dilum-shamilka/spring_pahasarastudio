@@ -10,52 +10,59 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin
 @RestController
 @RequestMapping("api/v1/user")
+@CrossOrigin
 public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+    public UserController(UserService userService) { this.userService = userService; }
 
     @PostMapping("/save")
-    public ResponseEntity<ResponseDTO> saveUser(@RequestBody UserDTO userDTO) {
-        try {
-            String res = userService.saveUser(userDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(VarList.RSP_SUCCESS, "Saved", userDTO));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
+    public ResponseEntity<ResponseDTO> saveUser(@RequestBody UserDTO userDTO){
+        String res = userService.saveUser(userDTO);
+        if(res.equals(VarList.RSP_SUCCESS)){
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ResponseDTO(VarList.RSP_SUCCESS,"Saved",userDTO));
         }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ResponseDTO(VarList.RSP_DUPLICATED,"User Already Exists",null));
     }
 
     @PutMapping("/update")
-    public ResponseEntity<ResponseDTO> updateUser(@RequestBody UserDTO userDTO) {
-        try {
-            String res = userService.updateUser(userDTO);
-            if (res.equals(VarList.RSP_SUCCESS)) {
-                return ResponseEntity.status(HttpStatus.ACCEPTED).body(new ResponseDTO(VarList.RSP_SUCCESS, "Updated", userDTO));
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND, "Not Found", null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
+    public ResponseEntity<ResponseDTO> updateUser(@RequestBody UserDTO userDTO){
+        String res = userService.updateUser(userDTO);
+        if(res.equals(VarList.RSP_SUCCESS)){
+            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS,"Updated",userDTO));
         }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND,"User Not Found",null));
     }
 
     @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<ResponseDTO> deleteUser(@PathVariable int userId) {
-        try {
-            String res = userService.deleteUser(userId);
-            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Deleted", null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
+    public ResponseEntity<ResponseDTO> deleteUser(@PathVariable Long userId){
+        String res = userService.deleteUser(userId);
+        if(res.equals(VarList.RSP_SUCCESS)){
+            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS,"Deleted",null));
         }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND,"User Not Found",null));
     }
 
     @GetMapping("/getAll")
-    public ResponseEntity<ResponseDTO> getAll() {
-        return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Success", userService.getAllUsers()));
+    public ResponseEntity<ResponseDTO> getAllUsers(){
+        List<UserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS,"Success",users));
+    }
+
+    @GetMapping("/get/{userId}")
+    public ResponseEntity<ResponseDTO> getUserById(@PathVariable Long userId){
+        UserDTO user = userService.getUserById(userId);
+        if(user != null){
+            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS,"Success",user));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND,"User Not Found",null));
     }
 }
