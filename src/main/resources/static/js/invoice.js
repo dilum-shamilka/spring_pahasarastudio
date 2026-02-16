@@ -1,41 +1,40 @@
 const BASE_URL = "http://localhost:8080/api/v1/invoices";
 
+// Load data on start
 document.addEventListener("DOMContentLoaded", getAllInvoices);
 
-// --- 1. GET ALL INVOICES ---
+// 1. GET ALL
 function getAllInvoices() {
     fetch(`${BASE_URL}/getAll`)
         .then(res => res.json())
         .then(data => {
             const tbody = document.getElementById('invoiceTableBody');
             tbody.innerHTML = '';
-
             if (data.code === "00" && data.content) {
                 data.content.forEach(inv => {
-                    const statusClass = inv.paymentStatus === 'PAID' ? 'bg-paid' : 'bg-unpaid';
+                    const statusClass = inv.paymentStatus === 'PAID' ? 'bg-success' : 'bg-warning text-dark';
                     tbody.innerHTML += `
                         <tr>
                             <td class="ps-4 fw-bold">${inv.invoiceNumber}</td>
                             <td># ${inv.bookingId}</td>
                             <td>${inv.date}</td>
-                            <td>Rs. ${inv.totalAmount.toLocaleString()}</td>
-                            <td><span class="status-badge ${statusClass}">${inv.paymentStatus}</span></td>
+                            <td>Rs. ${parseFloat(inv.totalAmount).toLocaleString()}</td>
+                            <td><span class="badge ${statusClass}">${inv.paymentStatus}</span></td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="prepareUpdate(${inv.id})">Edit</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="prepareUpdate(${inv.id})">Edit</button>
                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteInvoice(${inv.id})">Delete</button>
                             </td>
-                        </tr>
-                    `;
+                        </tr>`;
                 });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No records found</td></tr>';
             }
-        });
+        }).catch(err => console.error("Error loading table:", err));
 }
 
-// --- 2. SAVE INVOICE ---
+// 2. SAVE (Triggered by Form Submit)
 document.getElementById('invoiceForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    // If btnUpdate is visible, we should be updating, not saving
+    if (!document.getElementById('btnUpdate').classList.contains('d-none')) return;
 
     const dto = {
         invoiceNumber: document.getElementById('invoiceNumber').value,
@@ -49,20 +48,13 @@ document.getElementById('invoiceForm').addEventListener('submit', function(e) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dto)
-    })
-        .then(res => res.json())
-        .then(data => {
-            if(data.code === "00") {
-                alert("Success: Invoice Generated");
-                resetUI();
-                getAllInvoices();
-            } else {
-                alert("Error: " + data.message);
-            }
-        });
+    }).then(res => res.json()).then(data => {
+        if(data.code === "00") { alert("Saved!"); resetUI(); getAllInvoices(); }
+        else { alert("Error: " + data.message); }
+    });
 });
 
-// --- 3. PREPARE UPDATE ---
+// 3. PREPARE UPDATE (Fills the form)
 function prepareUpdate(id) {
     fetch(`${BASE_URL}/get/${id}`)
         .then(res => res.json())
@@ -79,13 +71,11 @@ function prepareUpdate(id) {
                 document.getElementById('btnSave').classList.add('d-none');
                 document.getElementById('btnUpdate').classList.remove('d-none');
                 document.getElementById('formHeader').innerText = "Update Invoice: " + inv.invoiceNumber;
-            } else {
-                alert("Invoice not found");
             }
         });
 }
 
-// --- 4. UPDATE INVOICE ---
+// 4. UPDATE (Triggered by Update Button)
 function updateInvoice() {
     const dto = {
         id: parseInt(document.getElementById('invoiceId').value),
@@ -100,35 +90,22 @@ function updateInvoice() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dto)
-    })
-        .then(res => res.json())
-        .then(data => {
-            if(data.code === "00") {
-                alert("Update Successful");
-                resetUI();
-                getAllInvoices();
-            } else {
-                alert("Failed: " + data.message);
-            }
-        });
+    }).then(res => res.json()).then(data => {
+        if(data.code === "00") { alert("Updated!"); resetUI(); getAllInvoices(); }
+    });
 }
 
-// --- 5. DELETE INVOICE ---
+// 5. DELETE
 function deleteInvoice(id) {
-    if(confirm("Permanently delete this invoice?")) {
+    if(confirm("Confirm Delete?")) {
         fetch(`${BASE_URL}/delete/${id}`, { method: 'DELETE' })
             .then(res => res.json())
-            .then(data => {
-                alert(data.message);
-                getAllInvoices();
-            });
+            .then(() => { getAllInvoices(); });
     }
 }
 
-// --- 6. RESET UI ---
 function resetUI() {
     document.getElementById('invoiceForm').reset();
-    document.getElementById('invoiceId').value = "";
     document.getElementById('btnSave').classList.remove('d-none');
     document.getElementById('btnUpdate').classList.add('d-none');
     document.getElementById('formHeader').innerText = "Generate New Invoice";
