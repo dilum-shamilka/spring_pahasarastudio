@@ -4,10 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 @Configuration
 @EnableWebSecurity
@@ -21,40 +21,30 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Disable CSRF for Postman/API testing
+                // Disable CSRF for API testing
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // 2. Configure request permissions for all Pahasara Studio Modules
+                // Permit access to auth, frontend resources, and APIs
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ Auth & User Endpoints (Whitelisting both AuthController & UserController)
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/user/**").permitAll()
-
-                        // ✅ Static Resources
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-
-                        // ✅ Whitelisting all Studio Modules (Synced with your Controller paths)
-                        .requestMatchers("/api/v1/bookings/**").permitAll()   // Matches BookingController
-                        .requestMatchers("/api/v1/clients/**").permitAll()    // Matches ClientController
-                        .requestMatchers("/api/v1/equipment/**").permitAll()  // Matches EquipmentController
-                        .requestMatchers("/api/v1/inventory/**").permitAll()  // Matches InventoryController
-                        .requestMatchers("/api/v1/invoices/**").permitAll()   // Matches InvoiceController
-                        .requestMatchers("/api/v1/payment/**").permitAll()    // Matches PaymentController
-                        .requestMatchers("/api/v1/services/**").permitAll()   // Matches StudioServiceController
-
-                        // ✅ Role-based access
+                        .requestMatchers("/api/v1/clients/**").permitAll()
+                        .requestMatchers("/api/v1/bookings/**").permitAll()
+                        .requestMatchers("/api/v1/inventory/**").permitAll()
+                        .requestMatchers("/api/v1/equipment/**").permitAll()
+                        .requestMatchers("/api/v1/services/**").permitAll()
+                        .requestMatchers("/api/v1/invoices/**").permitAll()
+                        .requestMatchers("/api/v1/payment/**").permitAll()
+                        .requestMatchers("/api/v1/photographers/**").permitAll()
+                        .requestMatchers("/css/**","/js/**","/images/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-
-                        // Any other request must be authenticated
                         .anyRequest().authenticated()
                 )
 
-                // 3. Disable browser-style redirects (Prevents the /login redirect loop)
+                // Disable default login form
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
-
-                // 4. Enable Basic Auth for easier testing in Postman
-                .httpBasic(basic -> {});
+                .httpBasic(basic -> {}); // enable basic auth for Postman
 
         return http.build();
     }
