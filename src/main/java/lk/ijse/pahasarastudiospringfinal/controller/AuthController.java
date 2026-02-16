@@ -21,7 +21,7 @@ public class AuthController {
     }
 
     // --- USER REGISTRATION ---
-    @PostMapping(value = "/register")
+    @PostMapping("/register")
     public ResponseEntity<ResponseDTO> registerUser(@RequestBody UserDTO userDTO) {
         try {
             String res = userService.saveUser(userDTO);
@@ -39,10 +39,9 @@ public class AuthController {
     }
 
     // --- USER LOGIN ---
-    @PostMapping(value = "/login")
+    @PostMapping("/login")
     public ResponseEntity<ResponseDTO> login(@RequestBody AuthDTO authDTO) {
         try {
-            // This logic will be handled in your UserService
             boolean isAuthenticated = userService.authenticate(authDTO);
 
             if (isAuthenticated) {
