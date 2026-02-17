@@ -63,6 +63,12 @@
       text-decoration: none; color: inherit; margin-bottom: 10px;
     }
     .btn-action:hover { background: #f1f5f9; border-color: var(--accent-color); }
+
+    /* Booking Warning */
+    #bookingWarning {
+      display: none;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
@@ -84,10 +90,12 @@
 </aside>
 
 <main class="main-content">
-  <div class="d-flex justify-content-between align-items-end mb-5">
+  <div class="d-flex justify-content-between align-items-end mb-2">
     <div>
       <h4 class="text-muted mb-1">Overview</h4>
       <h2 id="welcomeText" class="fw-bold">Welcome Back!</h2>
+      <!-- Booking warning alert -->
+      <div id="bookingWarning" class="alert alert-warning"></div>
     </div>
     <div class="text-end">
       <div class="text-muted small" id="currentDate"></div>
@@ -170,7 +178,7 @@
       bookingCount: 'http://localhost:8080/api/v1/bookings/getAll',
       invoiceCount: 'http://localhost:8080/api/v1/invoices/getAll',
       photographerCount: 'http://localhost:8080/api/v1/photographers/getAll',
-      frameCount: 'http://localhost:8080/api/v1/photoframe' // Note: New Endpoint
+      frameCount: 'http://localhost:8080/api/v1/photoframe'
     };
 
     for (const [id, url] of Object.entries(endpoints)) {
@@ -178,18 +186,39 @@
         const res = await fetch(url);
         const data = await res.json();
 
-        // Logical check for response format
-        // PhotoFrame returns [DTO, DTO] directly
-        // Others return { code: "00", content: [DTO, DTO] }
         if (id === 'frameCount') {
           document.getElementById(id).innerText = Array.isArray(data) ? data.length : 0;
         } else if (data && data.content) {
           document.getElementById(id).innerText = data.content.length;
+
+          // Check upcoming bookings
+          if(id === 'bookingCount') {
+            checkUpcomingBookings(data.content);
+          }
         }
       } catch (err) {
         console.error(`Error loading ${id}:`, err);
         document.getElementById(id).innerText = "0";
       }
+    }
+  }
+
+  function checkUpcomingBookings(bookings) {
+    const today = new Date();
+    const warningDays = 3; // alert for next 3 days
+
+    const upcoming = bookings.filter(b => {
+      const bookingDate = new Date(b.bookingDate); // Replace with your booking DTO field
+      const diffDays = (bookingDate - today) / (1000*60*60*24);
+      return diffDays >= 0 && diffDays <= warningDays;
+    });
+
+    const warningDiv = document.getElementById("bookingWarning");
+    if(upcoming.length > 0) {
+      warningDiv.style.display = "block";
+      warningDiv.innerText = `⚠️ You have ${upcoming.length} upcoming booking(s) in the next ${warningDays} day(s)!`;
+    } else {
+      warningDiv.style.display = "none";
     }
   }
 
