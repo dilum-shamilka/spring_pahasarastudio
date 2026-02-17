@@ -3,30 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <title>Studio Services Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/service.css">
+
+  <style>
+    body {
+      background-color: #f4f7f6;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding-bottom: 50px;
+    }
+
+    .main-card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+    }
+
+    .card-header {
+      font-weight: 600;
+    }
+
+    table.table tbody tr:hover {
+      background-color: rgba(0,0,0,0.03);
+      transition: background-color 0.2s;
+    }
+
+    table.table td,
+    table.table th {
+      vertical-align: middle;
+    }
+
+    .status-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .bg-active {
+      background-color: #d1e7dd;
+      color: #0f5132;
+    }
+
+    .bg-inactive {
+      background-color: #f8d7da;
+      color: #842029;
+    }
+
+    @media (max-width: 768px) {
+      .btn {
+        width: 100%;
+        margin-bottom: 5px;
+      }
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <h2 class="mb-4">🎬 Studio Services Management</h2>
 
-  <!-- Form to Add / Update Service -->
-  <div class="card mb-4">
+<div class="container mt-5">
+  <h2 class="mb-4">🎬 Studio Package Management</h2>
+
+  <!-- Form Card -->
+  <div class="card main-card mb-4">
     <div class="card-body">
       <form id="serviceForm">
         <input type="hidden" id="serviceId">
+
         <div class="mb-3">
-          <label for="serviceName" class="form-label">Service Name</label>
+          <label for="serviceName" class="form-label">Package Name</label>
           <input type="text" id="serviceName" class="form-control" required>
         </div>
+
         <div class="mb-3">
           <label for="price" class="form-label">Price</label>
           <input type="number" step="0.01" id="price" class="form-control" required>
         </div>
+
         <div class="mb-3">
           <label for="description" class="form-label">Description</label>
           <textarea id="description" class="form-control" rows="3"></textarea>
         </div>
+
         <div class="mb-3">
           <label for="status" class="form-label">Status</label>
           <select id="status" class="form-select">
@@ -34,21 +94,23 @@
             <option value="INACTIVE">INACTIVE</option>
           </select>
         </div>
-        <button type="submit" class="btn btn-primary" id="saveBtn">Save Service</button>
+
+        <button type="submit" class="btn btn-success" id="saveBtn">Save Package</button>
         <button type="button" class="btn btn-secondary" id="resetBtn">Reset</button>
       </form>
     </div>
   </div>
 
-  <!-- Services Table -->
-  <div class="card">
+  <!-- Table Card -->
+  <div class="card main-card">
     <div class="card-body">
-      <h5 class="card-title">All Services</h5>
+      <h5 class="card-title">All Packages</h5>
+
       <table class="table table-bordered table-striped">
         <thead class="table-dark">
         <tr>
           <th>ID</th>
-          <th>Service Name</th>
+          <th>Package Name</th>
           <th>Price</th>
           <th>Description</th>
           <th>Status</th>
@@ -57,12 +119,17 @@
         </thead>
         <tbody id="serviceTableBody"></tbody>
       </table>
+
     </div>
   </div>
 </div>
+
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- KEEPING YOUR ORIGINAL JS FILE -->
 <script src="/static/js/service.js"></script>
+
 </body>
 </html>

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ResponseDTO {
-    private String code;    // e.g., "00" success, "01" error
-    private String message; // descriptive message
-    private Object content; // UserDTO, username, etc.
+    private String code;    // "00" success, "01" error
+    private String message;
+    private Object content; // UserDTO, role, etc.
 }
