@@ -70,6 +70,44 @@
       display: none;
       margin-bottom: 20px;
     }
+
+    /* Floating Widgets CSS */
+    .floating-container {
+      position: fixed; bottom: 20px; right: 20px;
+      display: flex; flex-direction: column; gap: 10px; z-index: 2000;
+    }
+    .widget-btn {
+      width: 50px; height: 50px; border-radius: 50%; border: none;
+      color: white; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .widget-panel {
+      position: fixed; bottom: 85px; right: 20px; width: 300px;
+      background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      display: none; flex-direction: column; overflow: hidden;
+    }
+    .widget-header {
+      background: var(--sidebar-bg); color: white; padding: 10px 15px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Calculator Style */
+    #calc-display {
+      width: 100%; border: none; padding: 15px; text-align: right;
+      font-size: 1.5rem; background: #f1f5f9; outline: none;
+    }
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .calc-grid button {
+      padding: 15px; border: 0.5px solid #e2e8f0; background: white; font-weight: 600;
+    }
+    .calc-grid button:hover { background: #f8fafc; }
+    .btn-operator { color: var(--accent-color); }
+    .btn-equal { background: var(--accent-color) !important; color: white; }
+
+    /* Notepad Style */
+    #notepad-area {
+      width: 100%; height: 250px; border: none; padding: 15px;
+      resize: none; outline: none; font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
@@ -95,7 +133,6 @@
     <div>
       <h4 class="text-muted mb-1">Overview</h4>
       <h2 id="welcomeText" class="fw-bold">Welcome Back!</h2>
-      <!-- Booking warning alert -->
       <div id="bookingWarning" class="alert alert-warning"></div>
     </div>
     <div class="text-end">
@@ -165,6 +202,34 @@
   </div>
 </main>
 
+<div class="floating-container">
+  <button class="widget-btn bg-primary" onclick="toggleWidget('calculator')"><i class="fas fa-calculator"></i></button>
+  <button class="widget-btn bg-warning" onclick="toggleWidget('notepad')"><i class="fas fa-sticky-note"></i></button>
+</div>
+
+<div id="calculator" class="widget-panel">
+  <div class="widget-header"><span>Calculator</span><i class="fas fa-times cursor-pointer" onclick="toggleWidget('calculator')"></i></div>
+  <input type="text" id="calc-display" disabled value="0">
+  <div class="calc-grid">
+    <button onclick="clearCalc()" class="btn-operator">C</button>
+    <button onclick="appendCalc('/')" class="btn-operator">÷</button>
+    <button onclick="appendCalc('*')" class="btn-operator">×</button>
+    <button onclick="backspaceCalc()" class="btn-operator"><i class="fas fa-backspace"></i></button>
+    <button onclick="appendCalc('7')">7</button><button onclick="appendCalc('8')">8</button><button onclick="appendCalc('9')">9</button>
+    <button onclick="appendCalc('-')" class="btn-operator">−</button>
+    <button onclick="appendCalc('4')">4</button><button onclick="appendCalc('5')">5</button><button onclick="appendCalc('6')">6</button>
+    <button onclick="appendCalc('+')" class="btn-operator">+</button>
+    <button onclick="appendCalc('1')">1</button><button onclick="appendCalc('2')">2</button><button onclick="appendCalc('3')">3</button>
+    <button onclick="calculateResult()" class="btn-equal" style="grid-row: span 2">=</button>
+    <button onclick="appendCalc('0')" style="grid-column: span 2">0</button><button onclick="appendCalc('.')">.</button>
+  </div>
+</div>
+
+<div id="notepad" class="widget-panel">
+  <div class="widget-header"><span>Quick Notes</span><i class="fas fa-times cursor-pointer" onclick="toggleWidget('notepad')"></i></div>
+  <textarea id="notepad-area" placeholder="Type notes here..."></textarea>
+</div>
+
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const role = localStorage.getItem("userRole");
@@ -177,8 +242,46 @@
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 
+    // Load Note
+    document.getElementById("notepad-area").value = localStorage.getItem("pahasara_notes") || "";
+    document.getElementById("notepad-area").addEventListener("input", (e) => {
+      localStorage.setItem("pahasara_notes", e.target.value);
+    });
+
     loadStats();
   });
+
+  // Widget Toggle Logic
+  function toggleWidget(id) {
+    const el = document.getElementById(id);
+    const isVisible = el.style.display === 'flex';
+    document.querySelectorAll('.widget-panel').forEach(p => p.style.display = 'none');
+    el.style.display = isVisible ? 'none' : 'flex';
+  }
+
+  // Calculator Logic
+  let calcInput = "";
+  function appendCalc(val) {
+    calcInput += val;
+    document.getElementById("calc-display").value = calcInput;
+  }
+  function clearCalc() {
+    calcInput = "";
+    document.getElementById("calc-display").value = "0";
+  }
+  function backspaceCalc() {
+    calcInput = calcInput.slice(0, -1);
+    document.getElementById("calc-display").value = calcInput || "0";
+  }
+  function calculateResult() {
+    try {
+      calcInput = eval(calcInput).toString();
+      document.getElementById("calc-display").value = calcInput;
+    } catch {
+      document.getElementById("calc-display").value = "Error";
+      calcInput = "";
+    }
+  }
 
   async function loadStats() {
     const endpoints = {
@@ -195,14 +298,11 @@
         const res = await fetch(url);
         const data = await res.json();
 
-        // For frameCount & packageCount
         if(['frameCount','packageCount'].includes(id)) {
           document.getElementById(id).innerText = Array.isArray(data) ? data.length : 0;
         }
         else if (data && data.content) {
           document.getElementById(id).innerText = data.content.length;
-
-          // Check upcoming bookings
           if(id === 'bookingCount') {
             checkUpcomingBookings(data.content);
           }
@@ -216,10 +316,9 @@
 
   function checkUpcomingBookings(bookings) {
     const today = new Date();
-    const warningDays = 3; // alert for next 3 days
-
+    const warningDays = 3;
     const upcoming = bookings.filter(b => {
-      const bookingDate = new Date(b.bookingDate); // Replace with your booking DTO field
+      const bookingDate = new Date(b.bookingDate);
       const diffDays = (bookingDate - today) / (1000*60*60*24);
       return diffDays >= 0 && diffDays <= warningDays;
     });
