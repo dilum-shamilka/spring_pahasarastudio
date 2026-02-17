@@ -16,15 +16,13 @@ public class IndoorLocationBookingController {
     private final IndoorLocationBookingService service;
 
     @PostMapping
-    public IndoorLocationBookingDTO save(
-            @RequestBody IndoorLocationBookingDTO dto) {
+    public IndoorLocationBookingDTO save(@RequestBody IndoorLocationBookingDTO dto) {
         return service.save(dto);
     }
 
     @PutMapping("/{id}")
-    public IndoorLocationBookingDTO update(
-            @PathVariable Long id,
-            @RequestBody IndoorLocationBookingDTO dto) {
+    public IndoorLocationBookingDTO update(@PathVariable Long id,
+                                           @RequestBody IndoorLocationBookingDTO dto) {
         return service.update(id, dto);
     }
 
@@ -34,8 +32,7 @@ public class IndoorLocationBookingController {
     }
 
     @GetMapping("/{id}")
-    public IndoorLocationBookingDTO getById(
-            @PathVariable Long id) {
+    public IndoorLocationBookingDTO getById(@PathVariable Long id) {
         return service.getById(id);
     }
 

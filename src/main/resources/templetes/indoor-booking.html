@@ -54,7 +54,6 @@
             .btn-action { width: 100%; margin-bottom: 5px; }
         }
 
-        /* Dashboard Button */
         .nav-buttons .btn { margin-bottom: 15px; }
     </style>
 </head>
@@ -62,7 +61,6 @@
 
 <div class="container mt-5">
 
-    <!-- Dashboard Button -->
     <div class="nav-buttons">
         <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
             <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
@@ -71,7 +69,7 @@
 
     <h2 class="mb-4">🏠 Indoor Location Booking</h2>
 
-    <!-- BOOKING FORM CARD -->
+    <!-- Booking Form -->
     <div class="card main-card mb-4">
         <div class="card-header-custom">
             <h5 class="mb-0" id="formHeader">Booking Details</h5>
@@ -117,6 +115,17 @@
                             <option value="CANCELLED">CANCELLED</option>
                         </select>
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Shoot Type</label>
+                        <select id="shootType" class="form-select" required>
+                            <option value="">Select Type</option>
+                            <option value="BIRTHDAY">Birthday</option>
+                            <option value="BABY">Baby</option>
+                            <option value="GENDER_REVEAL">Gender Reveal</option>
+                            <option value="BRIDE_TO_BE">Bride to Be</option>
+                            <option value="PORTRAIT_SESSION">Portrait Session</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="mt-4">
@@ -128,7 +137,7 @@
         </div>
     </div>
 
-    <!-- BOOKING TABLE CARD -->
+    <!-- Booking Table -->
     <div class="card main-card">
         <div class="card-body">
             <h5 class="card-title mb-4">Indoor Bookings List</h5>
@@ -143,6 +152,7 @@
                         <th>Date</th>
                         <th>Time</th>
                         <th>Price</th>
+                        <th>Shoot Type</th>
                         <th>Status</th>
                         <th class="text-center">Actions</th>
                     </tr>
@@ -157,12 +167,16 @@
 </div>
 
 <script>
-    let bookings = [];
+    const BASE_URL = "http://localhost:8080/api/v1/indoor-booking";
+
     let editingId = null;
 
-    function renderBookings() {
+    async function renderBookings() {
         const tbody = document.getElementById('bookingTable');
         tbody.innerHTML = '';
+
+        const res = await fetch(BASE_URL);
+        const bookings = await res.json();
 
         if(bookings.length === 0) {
             document.getElementById('noData').classList.remove('d-none');
@@ -181,6 +195,7 @@
                 <td>${b.bookingDate}</td>
                 <td>${b.startTime} - ${b.endTime}</td>
                 <td>Rs. ${b.price}</td>
+                <td>${b.shootType}</td>
                 <td>
                     <span class="status-badge ${b.status === 'BOOKED' ? 'bg-booked' : b.status === 'COMPLETED' ? 'bg-completed' : 'bg-cancelled'}">
                         ${b.status}
@@ -195,9 +210,66 @@
         });
     }
 
-    function saveBooking() {
-        const booking = {
-            id: bookings.length + 1,
+    async function saveBooking() {
+        const dto = getFormData();
+        try {
+            await fetch(BASE_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(dto)
+            });
+            renderBookings();
+            clearForm();
+        } catch (e) {
+            alert("Error saving booking: " + e.message);
+        }
+    }
+
+    async function updateBooking() {
+        const dto = getFormData();
+        const id = document.getElementById('bookingId').value;
+
+        try {
+            await fetch(`${BASE_URL}/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(dto)
+            });
+            renderBookings();
+            clearForm();
+        } catch (e) {
+            alert("Error updating booking: " + e.message);
+        }
+    }
+
+    async function deleteBooking(id) {
+        if(!confirm("Are you sure to delete this booking?")) return;
+        await fetch(`${BASE_URL}/${id}`, {method: 'DELETE'});
+        renderBookings();
+    }
+
+    async function editBooking(id) {
+        const res = await fetch(`${BASE_URL}/${id}`);
+        const b = await res.json();
+
+        editingId = id;
+        document.getElementById('bookingId').value = b.id;
+        document.getElementById('locationName').value = b.locationName;
+        document.getElementById('customerName').value = b.customerName;
+        document.getElementById('contactNumber').value = b.contactNumber;
+        document.getElementById('bookingDate').value = b.bookingDate;
+        document.getElementById('startTime').value = b.startTime;
+        document.getElementById('endTime').value = b.endTime;
+        document.getElementById('price').value = b.price;
+        document.getElementById('status').value = b.status;
+        document.getElementById('shootType').value = b.shootType;
+
+        document.getElementById('saveBtn').classList.add('d-none');
+        document.getElementById('updateBtn').classList.remove('d-none');
+    }
+
+    function getFormData() {
+        return {
             locationName: document.getElementById('locationName').value,
             customerName: document.getElementById('customerName').value,
             contactNumber: document.getElementById('contactNumber').value,
@@ -205,52 +277,9 @@
             startTime: document.getElementById('startTime').value,
             endTime: document.getElementById('endTime').value,
             price: parseFloat(document.getElementById('price').value),
-            status: document.getElementById('status').value
+            status: document.getElementById('status').value,
+            shootType: document.getElementById('shootType').value
         };
-        bookings.push(booking);
-        renderBookings();
-        clearForm();
-    }
-
-    function editBooking(id) {
-        const booking = bookings.find(b => b.id === id);
-        if(!booking) return;
-
-        editingId = id;
-        document.getElementById('bookingId').value = booking.id;
-        document.getElementById('locationName').value = booking.locationName;
-        document.getElementById('customerName').value = booking.customerName;
-        document.getElementById('contactNumber').value = booking.contactNumber;
-        document.getElementById('bookingDate').value = booking.bookingDate;
-        document.getElementById('startTime').value = booking.startTime;
-        document.getElementById('endTime').value = booking.endTime;
-        document.getElementById('price').value = booking.price;
-        document.getElementById('status').value = booking.status;
-
-        document.getElementById('saveBtn').classList.add('d-none');
-        document.getElementById('updateBtn').classList.remove('d-none');
-    }
-
-    function updateBooking() {
-        const booking = bookings.find(b => b.id === editingId);
-        if(!booking) return;
-
-        booking.locationName = document.getElementById('locationName').value;
-        booking.customerName = document.getElementById('customerName').value;
-        booking.contactNumber = document.getElementById('contactNumber').value;
-        booking.bookingDate = document.getElementById('bookingDate').value;
-        booking.startTime = document.getElementById('startTime').value;
-        booking.endTime = document.getElementById('endTime').value;
-        booking.price = parseFloat(document.getElementById('price').value);
-        booking.status = document.getElementById('status').value;
-
-        renderBookings();
-        clearForm();
-    }
-
-    function deleteBooking(id) {
-        bookings = bookings.filter(b => b.id !== id);
-        renderBookings();
     }
 
     function clearForm() {

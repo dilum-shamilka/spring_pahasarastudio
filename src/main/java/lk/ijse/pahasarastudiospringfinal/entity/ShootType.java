@@ -1,7 +1,6 @@
 package lk.ijse.pahasarastudiospringfinal.entity;
 
 public enum ShootType {
-
     BIRTHDAY,
     BABY,
     GENDER_REVEAL,

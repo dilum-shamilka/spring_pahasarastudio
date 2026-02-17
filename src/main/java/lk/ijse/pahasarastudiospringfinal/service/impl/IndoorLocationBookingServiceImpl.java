@@ -12,37 +12,27 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class IndoorLocationBookingServiceImpl
-        implements IndoorLocationBookingService {
+public class IndoorLocationBookingServiceImpl implements IndoorLocationBookingService {
 
     private final IndoorLocationBookingRepository repository;
 
     @Override
     public IndoorLocationBookingDTO save(IndoorLocationBookingDTO dto) {
-
-        var conflicts = repository
-                .findByBookingDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
-                        dto.getBookingDate(),
-                        dto.getEndTime(),
-                        dto.getStartTime()
-                );
-
-        if (!conflicts.isEmpty()) {
-            throw new RuntimeException("Time slot already booked!");
-        }
+        var conflicts = repository.findByBookingDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
+                dto.getBookingDate(),
+                dto.getStartTime(),
+                dto.getEndTime()
+        );
+        if (!conflicts.isEmpty()) throw new RuntimeException("Time slot already booked!");
 
         IndoorLocationBooking saved = repository.save(mapToEntity(dto));
-
         return mapToDTO(saved);
     }
 
     @Override
-    public IndoorLocationBookingDTO update(Long id,
-                                           IndoorLocationBookingDTO dto) {
-
+    public IndoorLocationBookingDTO update(Long id, IndoorLocationBookingDTO dto) {
         IndoorLocationBooking existing = repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         existing.setLocationName(dto.getLocationName());
         existing.setShootType(dto.getShootType());
@@ -64,23 +54,16 @@ public class IndoorLocationBookingServiceImpl
 
     @Override
     public IndoorLocationBookingDTO getById(Long id) {
-        return repository.findById(id)
-                .map(this::mapToDTO)
-                .orElseThrow(() ->
-                        new RuntimeException("Booking not found"));
+        return repository.findById(id).map(this::mapToDTO)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
     }
 
     @Override
     public List<IndoorLocationBookingDTO> getAll() {
-        return repository.findAll()
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        return repository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
-    private IndoorLocationBookingDTO mapToDTO(
-            IndoorLocationBooking entity) {
-
+    private IndoorLocationBookingDTO mapToDTO(IndoorLocationBooking entity) {
         return IndoorLocationBookingDTO.builder()
                 .id(entity.getId())
                 .locationName(entity.getLocationName())
@@ -95,9 +78,7 @@ public class IndoorLocationBookingServiceImpl
                 .build();
     }
 
-    private IndoorLocationBooking mapToEntity(
-            IndoorLocationBookingDTO dto) {
-
+    private IndoorLocationBooking mapToEntity(IndoorLocationBookingDTO dto) {
         return IndoorLocationBooking.builder()
                 .id(dto.getId())
                 .locationName(dto.getLocationName())

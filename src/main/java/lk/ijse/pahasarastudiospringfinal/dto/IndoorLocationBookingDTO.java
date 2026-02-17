@@ -13,7 +13,6 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Builder
 public class IndoorLocationBookingDTO {
-
     private Long id;
     private String locationName;
     private ShootType shootType;

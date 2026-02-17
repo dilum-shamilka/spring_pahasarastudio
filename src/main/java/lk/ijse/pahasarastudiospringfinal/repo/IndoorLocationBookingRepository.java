@@ -7,15 +7,14 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-public interface IndoorLocationBookingRepository
-        extends JpaRepository<IndoorLocationBooking, Long> {
+public interface IndoorLocationBookingRepository extends JpaRepository<IndoorLocationBooking, Long> {
 
     List<IndoorLocationBooking> findByBookingDate(LocalDate bookingDate);
 
     List<IndoorLocationBooking>
     findByBookingDateAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
             LocalDate bookingDate,
-            LocalTime endTime,
-            LocalTime startTime
+            LocalTime startTime,
+            LocalTime endTime
     );
 }

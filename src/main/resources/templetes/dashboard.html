@@ -55,6 +55,7 @@
     .bg-orange-light { background: #fff7ed; color: #f97316; }
     .bg-pink-light { background: #fff0f6; color: #ec4899; }
     .bg-teal-light { background: #f0fdfa; color: #14b8a6; }
+    .bg-purple-dark { background: #ede9fe; color: #7c3aed; }
 
     /* Quick Actions */
     .btn-action {
@@ -71,7 +72,7 @@
       margin-bottom: 20px;
     }
 
-    /* Floating Widgets CSS */
+    /* Floating Widgets */
     .floating-container {
       position: fixed; bottom: 20px; right: 20px;
       display: flex; flex-direction: column; gap: 10px; z-index: 2000;
@@ -124,6 +125,7 @@
     <a href="inventory.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> Inventory</a>
     <a href="photo-frame.html" class="nav-link"><i class="fas fa-image"></i> Photo Frame</a>
     <a href="cost-management.html" class="nav-link"><i class="fas fa-coins"></i> Cost Management</a>
+    <a href="indoor-booking.html" class="nav-link"><i class="fas fa-map-marker-alt"></i> Indoor Booking</a>
   </nav>
   <a href="#" onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt me-2"></i> Log Out</a>
 </aside>
@@ -140,68 +142,32 @@
     </div>
   </div>
 
+  <!-- Stats -->
   <div class="row g-4 mb-5">
-    <div class="col-md">
-      <div class="stat-card">
-        <div class="icon-box bg-blue-light"><i class="fas fa-users"></i></div>
-        <div class="text-muted small fw-medium">Total Clients</div>
-        <h3 class="fw-bold mb-0" id="userCount">0</h3>
-      </div>
-    </div>
-    <div class="col-md">
-      <div class="stat-card">
-        <div class="icon-box bg-green-light"><i class="fas fa-calendar-check"></i></div>
-        <div class="text-muted small fw-medium">Active Bookings</div>
-        <h3 class="fw-bold mb-0" id="bookingCount">0</h3>
-      </div>
-    </div>
-    <div class="col-md">
-      <div class="stat-card">
-        <div class="icon-box bg-purple-light"><i class="fas fa-file-invoice"></i></div>
-        <div class="text-muted small fw-medium">Unpaid Invoices</div>
-        <h3 class="fw-bold mb-0" id="invoiceCount">0</h3>
-      </div>
-    </div>
-    <div class="col-md">
-      <div class="stat-card">
-        <div class="icon-box bg-orange-light"><i class="fas fa-camera"></i></div>
-        <div class="text-muted small fw-medium">Photographers</div>
-        <h3 class="fw-bold mb-0" id="photographerCount">0</h3>
-      </div>
-    </div>
-    <div class="col-md">
-      <div class="stat-card">
-        <div class="icon-box bg-pink-light"><i class="fas fa-border-all"></i></div>
-        <div class="text-muted small fw-medium">Photo Frames</div>
-        <h3 class="fw-bold mb-0" id="frameCount">0</h3>
-      </div>
-    </div>
-    <div class="col-md">
-      <div class="stat-card">
-        <div class="icon-box bg-teal-light"><i class="fas fa-gift"></i></div>
-        <div class="text-muted small fw-medium">Packages</div>
-        <h3 class="fw-bold mb-0" id="packageCount">0</h3>
-      </div>
-    </div>
+    <div class="col-md"><div class="stat-card"><div class="icon-box bg-blue-light"><i class="fas fa-users"></i></div><div class="text-muted small fw-medium">Total Clients</div><h3 class="fw-bold mb-0" id="userCount">0</h3></div></div>
+    <div class="col-md"><div class="stat-card"><div class="icon-box bg-green-light"><i class="fas fa-calendar-check"></i></div><div class="text-muted small fw-medium">Active Bookings</div><h3 class="fw-bold mb-0" id="bookingCount">0</h3></div></div>
+    <div class="col-md"><div class="stat-card"><div class="icon-box bg-purple-light"><i class="fas fa-file-invoice"></i></div><div class="text-muted small fw-medium">Unpaid Invoices</div><h3 class="fw-bold mb-0" id="invoiceCount">0</h3></div></div>
+    <div class="col-md"><div class="stat-card"><div class="icon-box bg-orange-light"><i class="fas fa-camera"></i></div><div class="text-muted small fw-medium">Photographers</div><h3 class="fw-bold mb-0" id="photographerCount">0</h3></div></div>
+    <div class="col-md"><div class="stat-card"><div class="icon-box bg-pink-light"><i class="fas fa-border-all"></i></div><div class="text-muted small fw-medium">Photo Frames</div><h3 class="fw-bold mb-0" id="frameCount">0</h3></div></div>
+    <div class="col-md"><div class="stat-card"><div class="icon-box bg-teal-light"><i class="fas fa-gift"></i></div><div class="text-muted small fw-medium">Packages</div><h3 class="fw-bold mb-0" id="packageCount">0</h3></div></div>
+    <div class="col-md"><div class="stat-card"><div class="icon-box bg-purple-dark"><i class="fas fa-map-marker-alt"></i></div><div class="text-muted small fw-medium">Indoor Bookings</div><h3 class="fw-bold mb-0" id="indoorBookingCount">0</h3></div></div>
   </div>
 
-  <div class="row">
-    <div class="col-lg-12">
-      <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
-        <h5 class="fw-bold mb-4">Quick Actions</h5>
-        <div class="row row-cols-1 row-cols-md-3 g-3">
-          <div class="col"><a href="photographer.html" class="btn-action"><i class="fas fa-user-plus me-2 text-info"></i> Photographer</a></div>
-          <div class="col"><a href="booking.html" class="btn-action"><i class="fas fa-calendar-plus me-2 text-primary"></i> Booking</a></div>
-          <div class="col"><a href="album-management.html" class="btn-action"><i class="fas fa-images me-2 text-warning"></i> Album Management</a></div>
-          <div class="col"><a href="invoice.html" class="btn-action"><i class="fas fa-file-invoice-dollar me-2 text-danger"></i> Invoice</a></div>
-          <div class="col"><a href="email.html" class="btn-action"><i class="fas fa-envelope me-2 text-success"></i> Email</a></div>
-          <div class="col"><a href="photo-frame.html" class="btn-action"><i class="fas fa-crop-simple me-2 text-pink"></i> Photo Frames</a></div>
-        </div>
-      </div>
+  <!-- Quick Actions -->
+  <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+    <h5 class="fw-bold mb-4">Quick Actions</h5>
+    <div class="row row-cols-1 row-cols-md-3 g-3">
+      <div class="col"><a href="photographer.html" class="btn-action"><i class="fas fa-user-plus me-2 text-info"></i> Photographer</a></div>
+      <div class="col"><a href="booking.html" class="btn-action"><i class="fas fa-calendar-plus me-2 text-primary"></i> Booking</a></div>
+      <div class="col"><a href="indoor-booking.html" class="btn-action"><i class="fas fa-map-marker-alt me-2 text-purple"></i> Indoor Booking</a></div>
+      <div class="col"><a href="album-management.html" class="btn-action"><i class="fas fa-images me-2 text-warning"></i> Album Management</a></div>
+      <div class="col"><a href="invoice.html" class="btn-action"><i class="fas fa-file-invoice-dollar me-2 text-danger"></i> Invoice</a></div>
+      <div class="col"><a href="email.html" class="btn-action"><i class="fas fa-envelope me-2 text-success"></i> Email</a></div>
     </div>
   </div>
 </main>
 
+<!-- Floating Widgets -->
 <div class="floating-container">
   <button class="widget-btn bg-primary" onclick="toggleWidget('calculator')"><i class="fas fa-calculator"></i></button>
   <button class="widget-btn bg-warning" onclick="toggleWidget('notepad')"><i class="fas fa-sticky-note"></i></button>
@@ -234,24 +200,18 @@
   document.addEventListener('DOMContentLoaded', () => {
     const role = localStorage.getItem("userRole");
     const email = localStorage.getItem("userEmail");
-
     if (!role) { window.location.href = "auth.html"; return; }
 
     document.getElementById("welcomeText").innerText = `Hello, ${email ? email.split('@')[0] : 'User'}!`;
-    document.getElementById("currentDate").innerText = new Date().toLocaleDateString('en-US', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+    document.getElementById("currentDate").innerText = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
     // Load Note
     document.getElementById("notepad-area").value = localStorage.getItem("pahasara_notes") || "";
-    document.getElementById("notepad-area").addEventListener("input", (e) => {
-      localStorage.setItem("pahasara_notes", e.target.value);
-    });
+    document.getElementById("notepad-area").addEventListener("input", e => localStorage.setItem("pahasara_notes", e.target.value));
 
     loadStats();
   });
 
-  // Widget Toggle Logic
   function toggleWidget(id) {
     const el = document.getElementById(id);
     const isVisible = el.style.display === 'flex';
@@ -259,85 +219,43 @@
     el.style.display = isVisible ? 'none' : 'flex';
   }
 
-  // Calculator Logic
+  // Calculator
   let calcInput = "";
-  function appendCalc(val) {
-    calcInput += val;
-    document.getElementById("calc-display").value = calcInput;
-  }
-  function clearCalc() {
-    calcInput = "";
-    document.getElementById("calc-display").value = "0";
-  }
-  function backspaceCalc() {
-    calcInput = calcInput.slice(0, -1);
-    document.getElementById("calc-display").value = calcInput || "0";
-  }
-  function calculateResult() {
-    try {
-      calcInput = eval(calcInput).toString();
-      document.getElementById("calc-display").value = calcInput;
-    } catch {
-      document.getElementById("calc-display").value = "Error";
-      calcInput = "";
-    }
-  }
+  function appendCalc(val) { calcInput += val; document.getElementById("calc-display").value = calcInput; }
+  function clearCalc() { calcInput = ""; document.getElementById("calc-display").value = "0"; }
+  function backspaceCalc() { calcInput = calcInput.slice(0,-1); document.getElementById("calc-display").value = calcInput||"0"; }
+  function calculateResult() { try { calcInput = eval(calcInput).toString(); document.getElementById("calc-display").value = calcInput; } catch { document.getElementById("calc-display").value="Error"; calcInput=""; } }
 
   async function loadStats() {
     const endpoints = {
-      userCount: 'http://localhost:8080/api/v1/clients/getAll',
-      bookingCount: 'http://localhost:8080/api/v1/bookings/getAll',
-      invoiceCount: 'http://localhost:8080/api/v1/invoices/getAll',
-      photographerCount: 'http://localhost:8080/api/v1/photographers/getAll',
-      frameCount: 'http://localhost:8080/api/v1/photoframe',
-      packageCount: 'http://localhost:8080/api/v1/services/getAll'
+      userCount:'http://localhost:8080/api/v1/clients/getAll',
+      bookingCount:'http://localhost:8080/api/v1/bookings/getAll',
+      indoorBookingCount:'http://localhost:8080/api/v1/indoor-booking/getAll',
+      invoiceCount:'http://localhost:8080/api/v1/invoices/getAll',
+      photographerCount:'http://localhost:8080/api/v1/photographers/getAll',
+      frameCount:'http://localhost:8080/api/v1/photoframe',
+      packageCount:'http://localhost:8080/api/v1/services/getAll'
     };
 
-    for (const [id, url] of Object.entries(endpoints)) {
+    for(const [id,url] of Object.entries(endpoints)) {
       try {
         const res = await fetch(url);
         const data = await res.json();
-
-        if(['frameCount','packageCount'].includes(id)) {
-          document.getElementById(id).innerText = Array.isArray(data) ? data.length : 0;
-        }
-        else if (data && data.content) {
-          document.getElementById(id).innerText = data.content.length;
-          if(id === 'bookingCount') {
-            checkUpcomingBookings(data.content);
-          }
-        }
-      } catch (err) {
-        console.error(`Error loading ${id}:`, err);
-        document.getElementById(id).innerText = "0";
-      }
+        const count = Array.isArray(data) ? data.length : (data.content ? data.content.length : 0);
+        document.getElementById(id).innerText = count;
+        if(id==='bookingCount') checkUpcomingBookings(data.content||data);
+      } catch(err){ console.error(`Error loading ${id}:`,err); document.getElementById(id).innerText="0"; }
     }
   }
 
-  function checkUpcomingBookings(bookings) {
-    const today = new Date();
-    const warningDays = 3;
-    const upcoming = bookings.filter(b => {
-      const bookingDate = new Date(b.bookingDate);
-      const diffDays = (bookingDate - today) / (1000*60*60*24);
-      return diffDays >= 0 && diffDays <= warningDays;
-    });
-
+  function checkUpcomingBookings(bookings){
+    const today = new Date(); const warningDays = 3;
+    const upcoming = bookings.filter(b => { const bd = new Date(b.bookingDate); return (bd-today)/(1000*60*60*24)>=0 && (bd-today)/(1000*60*60*24)<=warningDays; });
     const warningDiv = document.getElementById("bookingWarning");
-    if(upcoming.length > 0) {
-      warningDiv.style.display = "block";
-      warningDiv.innerText = `⚠️ You have ${upcoming.length} upcoming booking(s) in the next ${warningDays} day(s)!`;
-    } else {
-      warningDiv.style.display = "none";
-    }
+    if(upcoming.length>0){ warningDiv.style.display='block'; warningDiv.innerHTML=`You have ${upcoming.length} upcoming booking(s) in next ${warningDays} day(s).`; }
   }
-
-  function logout() {
-    if(confirm("Are you sure you want to logout?")) {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
-  }
+  function logout(){ localStorage.clear(); window.location.href="auth.html"; }
 </script>
+
 </body>
 </html>
