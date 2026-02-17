@@ -11,58 +11,69 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/user")
-@CrossOrigin
+@RequestMapping("api/v1/users")
+@CrossOrigin // Allows frontend to communicate with backend
 public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) { this.userService = userService; }
-
-    @PostMapping("/save")
-    public ResponseEntity<ResponseDTO> saveUser(@RequestBody UserDTO userDTO){
-        String res = userService.saveUser(userDTO);
-        if(res.equals(VarList.RSP_SUCCESS)){
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ResponseDTO(VarList.RSP_SUCCESS,"Saved",userDTO));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ResponseDTO(VarList.RSP_DUPLICATED,"User Already Exists",null));
-    }
-
-    @PutMapping("/update")
-    public ResponseEntity<ResponseDTO> updateUser(@RequestBody UserDTO userDTO){
-        String res = userService.updateUser(userDTO);
-        if(res.equals(VarList.RSP_SUCCESS)){
-            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS,"Updated",userDTO));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND,"User Not Found",null));
-    }
-
-    @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<ResponseDTO> deleteUser(@PathVariable Long userId){
-        String res = userService.deleteUser(userId);
-        if(res.equals(VarList.RSP_SUCCESS)){
-            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS,"Deleted",null));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND,"User Not Found",null));
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/getAll")
-    public ResponseEntity<ResponseDTO> getAllUsers(){
-        List<UserDTO> users = userService.getAllUsers();
-        return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS,"Success",users));
+    public ResponseEntity<ResponseDTO> getAllUsers() {
+        try {
+            List<UserDTO> users = userService.getAllUsers();
+            return ResponseEntity.ok(new ResponseDTO("00", "Success", users));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO("05", e.getMessage(), null));
+        }
     }
 
-    @GetMapping("/get/{userId}")
-    public ResponseEntity<ResponseDTO> getUserById(@PathVariable Long userId){
-        UserDTO user = userService.getUserById(userId);
-        if(user != null){
-            return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS,"Success",user));
+    @GetMapping("/get/{id}")
+    public ResponseEntity<ResponseDTO> getUserById(@PathVariable Long id) {
+        try {
+            UserDTO user = userService.getUser(id);
+            return ResponseEntity.ok(new ResponseDTO("00", "Success", user));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDTO("01", e.getMessage(), null));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ResponseDTO(VarList.RSP_NO_DATA_FOUND,"User Not Found",null));
+    }
+
+    @PostMapping("/save")
+    public ResponseEntity<ResponseDTO> saveUser(@RequestBody UserDTO dto) {
+        try {
+            UserDTO savedUser = userService.saveUser(dto);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ResponseDTO("00", "User Saved Successfully", savedUser));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDTO("05", e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/update") // Keep this consistent with the JS fetch call
+    public ResponseEntity<ResponseDTO> updateUser(@RequestBody UserDTO dto) {
+        try {
+            UserDTO updatedUser = userService.updateUser(dto);
+            return ResponseEntity.ok(new ResponseDTO("00", "User Updated Successfully", updatedUser));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDTO("01", e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ResponseDTO> deleteUser(@PathVariable Long id) {
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.ok(new ResponseDTO("00", "User Deleted Successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDTO("01", e.getMessage(), null));
+        }
     }
 }

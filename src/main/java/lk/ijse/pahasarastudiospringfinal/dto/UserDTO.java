@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
-    private Long userId;      // Changed to Long to match entity
-    private String username;
-    private String password;
+    private Long userId;
+    private String name;
     private String email;
     private String role;
+    private String password; // Required for registration and update
 }

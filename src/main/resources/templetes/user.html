@@ -2,182 +2,238 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Pahasara Studio | User Management</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management - Pahasara Studio</title>
+
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
-        body { background-color: #A9BACF; font-family: 'Poppins', sans-serif; padding-bottom:50px;}
-        .card { border-radius:15px; box-shadow:0 8px 20px rgba(0,0,0,0.15); border: none;}
-        .table-container { background:white; border-radius:15px; padding:25px; box-shadow:0 8px 20px rgba(0,0,0,0.15);}
-        th { background-color:#2c3e50 !important; color:white !important;}
-        .badge-admin { background-color:#e74c3c; color: white;}
-        .badge-user { background-color:#3498db; color: white;}
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+
+        .main-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .btn-action {
+            width: 110px;
+        }
+
+        table.table tbody tr:hover {
+            background-color: rgba(0,0,0,0.03);
+            transition: background-color 0.2s;
+        }
+
+        table.table td, table.table th {
+            vertical-align: middle;
+        }
+
+        .card-header {
+            font-weight: 600;
+        }
+
+        .badge-role {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background-color: #e2e3e5;
+            color: #41464b;
+        }
+
+        @media (max-width: 768px) {
+            .btn-action {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h2 class="mb-4 text-center">🎯 Pahasara Studio User Management</h2>
 
-    <div class="card mb-5">
-        <div class="card-header bg-white"><h5 id="formTitle">Manage User Details</h5></div>
+<div class="container mt-5">
+    <h2 class="mb-4">👤 User Management</h2>
+
+    <!-- FORM CARD -->
+    <div class="card main-card mb-4">
         <div class="card-body">
             <form id="userForm">
                 <input type="hidden" id="userId">
+
                 <div class="row g-3">
-                    <div class="col-md-6"><input type="text" id="username" class="form-control" placeholder="Username" required></div>
-                    <div class="col-md-6"><input type="email" id="email" class="form-control" placeholder="Email" required></div>
-                    <div class="col-md-6"><input type="password" id="password" class="form-control" placeholder="Password (Optional for Update)"></div>
-                    <div class="col-md-6">
-                        <select id="role" class="form-select">
-                            <option value="USER">USER</option>
+                    <div class="col-md-4">
+                        <input type="text" id="userName" class="form-control" placeholder="Full Name" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <input type="email" id="userEmail" class="form-control" placeholder="Email Address" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <select id="userRole" class="form-select">
+                            <option value="OWNER">OWNER</option>
                             <option value="ADMIN">ADMIN</option>
+                            <option value="RECEPTION">RECEPTION</option>
+                            <option value="PHOTOGRAPHER">PHOTOGRAPHER</option>
+                            <option value="VIDEOGRAPHER">VIDEOGRAPHER</option>
+                            <option value="USER" selected>USER</option>
                         </select>
                     </div>
                 </div>
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary px-4">Save / Update</button>
-                    <button type="button" class="btn btn-outline-secondary px-4" onclick="resetForm()">Clear</button>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-success btn-sm btn-action" id="saveBtn">Save</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-action" id="resetBtn">Reset</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="table-container">
-        <div class="d-flex justify-content-between mb-3">
-            <h5>Registered Users</h5>
-            <button class="btn btn-sm btn-outline-primary" onclick="loadUsers()">🔄 Refresh</button>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle" id="userTable">
-                <thead>
-                <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th class="text-center">Actions</th></tr>
+    <!-- TABLE CARD -->
+    <div class="card main-card">
+        <div class="card-body">
+            <h5 class="card-title">All Users</h5>
+
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th class="text-center">Actions</th>
+                </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody id="userTableBody"></tbody>
             </table>
+
+            <div id="noData" class="text-center text-muted py-4 d-none">
+                No users found.
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const API_URL = "http://localhost:8080/api/v1/user";
+    const API_BASE = "http://localhost:8080/api/v1/users";
 
-    // ================= LOAD USERS =================
-    async function loadUsers() {
-        const tbody = document.querySelector("#userTable tbody");
+    async function fetchUsers() {
         try {
-            const res = await fetch(`${API_URL}/getAll`);
-            const result = await res.json();
-
+            const res = await fetch(`${API_BASE}/getAll`);
+            const data = await res.json();
+            const tbody = document.getElementById("userTableBody");
+            const noData = document.getElementById("noData");
             tbody.innerHTML = "";
-            if (result.code === "00" && result.content.length > 0) {
-                result.content.forEach(user => {
-                    const badgeClass = user.role === "ADMIN" ? "badge-admin" : "badge-user";
+
+            if (data.code === "00" && data.content && data.content.length > 0) {
+                noData.classList.add("d-none");
+                data.content.forEach(u => {
                     tbody.innerHTML += `
-                    <tr>
-                        <td>#${user.userId}</td>
-                        <td>${user.username}</td>
-                        <td>${user.email}</td>
-                        <td><span class="badge ${badgeClass}">${user.role}</span></td>
-                        <td class="text-center">
-                            <button class="btn btn-warning btn-sm me-2" onclick="editUser(${user.userId})">Edit</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.userId})">Delete</button>
-                        </td>
-                    </tr>
-                `;
+                        <tr>
+                            <td>#${u.userId}</td>
+                            <td>${u.name}</td>
+                            <td>${u.email}</td>
+                            <td><span class="badge-role">${u.role}</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${u.userId})">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${u.userId})">Delete</button>
+                            </td>
+                        </tr>`;
                 });
             } else {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center">No users found.</td></tr>`;
+                noData.classList.remove("d-none");
             }
         } catch (e) {
-            alert("Failed to load users. Check backend connection.");
-            console.error(e);
+            alert("Backend server not responding.");
         }
     }
 
-    // ================= EDIT USER =================
-    async function editUser(userId) {
-        try {
-            const res = await fetch(`${API_URL}/get/${userId}`);
-            const result = await res.json();
-
-            if (result.code === "00") {
-                const u = result.content;
-                document.getElementById("userId").value = u.userId;
-                document.getElementById("username").value = u.username;
-                document.getElementById("email").value = u.email;
-                document.getElementById("role").value = u.role;
-                document.getElementById("password").value = ""; // optional
-                document.getElementById("formTitle").innerText = `Update User #${u.userId}`;
-            } else {
-                alert("User not found");
-            }
-        } catch (e) {
-            alert("Error fetching user data");
-            console.error(e);
-        }
-    }
-
-    // ================= DELETE USER =================
-    async function deleteUser(userId) {
-        if (!confirm("Are you sure you want to delete this user?")) return;
-
-        try {
-            const res = await fetch(`${API_URL}/delete/${userId}`, { method: "DELETE" });
-            const result = await res.json();
-
-            alert(result.message || "Deleted");
-            loadUsers();
-        } catch (e) {
-            alert("Error deleting user");
-            console.error(e);
-        }
-    }
-
-    // ================= SAVE / UPDATE USER =================
-    document.getElementById("userForm").addEventListener("submit", async (e) => {
+    document.getElementById("userForm").addEventListener("submit", async e => {
         e.preventDefault();
 
-        const userId = document.getElementById("userId").value;
-        const userDTO = {
-            userId: userId ? parseInt(userId) : null,
-            username: document.getElementById("username").value,
-            email: document.getElementById("email").value,
-            password: document.getElementById("password").value,
-            role: document.getElementById("role").value
+        const id = document.getElementById("userId").value;
+        const dto = {
+            userId: id ? parseInt(id) : null,
+            name: document.getElementById("userName").value,
+            email: document.getElementById("userEmail").value,
+            role: document.getElementById("userRole").value
         };
 
-        const method = userId ? "PUT" : "POST";
-        const endpoint = userId ? "/update" : "/save";
+        const endpoint = id ? `${API_BASE}/update` : `${API_BASE}/save`;
+        const method = id ? "PUT" : "POST";
 
         try {
-            const res = await fetch(`${API_URL}${endpoint}`, {
+            const res = await fetch(endpoint, {
                 method: method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(userDTO)
+                body: JSON.stringify(dto)
             });
+
             const result = await res.json();
 
-            alert(result.message);
-            if (result.code === "00") {
+            if (res.ok) {
+                alert(result.message);
                 resetForm();
-                loadUsers();
+                fetchUsers();
+            } else {
+                alert(result.message);
             }
         } catch (e) {
-            alert("Error saving user");
-            console.error(e);
+            alert("Connection error.");
         }
     });
 
-    // ================= RESET FORM =================
-    function resetForm() {
-        document.getElementById("userForm").reset();
-        document.getElementById("userId").value = "";
-        document.getElementById("formTitle").innerText = "Manage User Details";
+    async function editUser(id) {
+        try {
+            const res = await fetch(`${API_BASE}/get/${id}`);
+            const data = await res.json();
+            if (data.code === "00") {
+                const u = data.content;
+                document.getElementById("userId").value = u.userId;
+                document.getElementById("userName").value = u.name;
+                document.getElementById("userEmail").value = u.email;
+                document.getElementById("userRole").value = u.role;
+
+                const saveBtn = document.getElementById("saveBtn");
+                saveBtn.innerText = "Update";
+                saveBtn.className = "btn btn-primary btn-sm btn-action";
+            }
+        } catch (e) {
+            alert("Error loading user.");
+        }
     }
 
-    // ================= INIT =================
-    window.onload = loadUsers;
+    async function deleteUser(id) {
+        if (confirm("Permanently delete this user?")) {
+            try {
+                const res = await fetch(`${API_BASE}/delete/${id}`, { method: "DELETE" });
+                const result = await res.json();
+                alert(result.message);
+                fetchUsers();
+            } catch (e) {
+                alert("Delete failed.");
+            }
+        }
+    }
 
+    function resetForm() {
+        document.getElementById("userId").value = "";
+        document.getElementById("userForm").reset();
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.innerText = "Save";
+        saveBtn.className = "btn btn-success btn-sm btn-action";
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+    document.addEventListener("DOMContentLoaded", fetchUsers);
 </script>
+
 </body>
 </html>
