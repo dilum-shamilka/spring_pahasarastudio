@@ -3,9 +3,13 @@ let bookingList = [];
 
 $(document).ready(function () {
     loadBookings();
+
+    $("#resetBtn").click(function() {
+        resetForm();
+    });
 });
 
-// LOAD ALL BOOKINGS
+// LOAD DATA
 function loadBookings() {
     $.get(`${BASE_URL}/getAll`, function (response) {
         const data = response.content ? response.content : response;
@@ -13,104 +17,99 @@ function loadBookings() {
 
         let rows = "";
         if (bookingList.length === 0) {
-            rows = "<tr><td colspan='6'>No bookings found.</td></tr>";
+            $("#noData").removeClass("d-none");
+            $("#bookingTableBody").html("");
         } else {
-            bookingList.forEach((b, idx) => {
+            $("#noData").addClass("d-none");
+            bookingList.forEach((b) => {
                 rows += `
                 <tr>
-                    <td>${b.id}</td>
+                    <td class="text-muted">#${b.id}</td>
                     <td>${b.bookingDate}</td>
                     <td>${b.location}</td>
-                    <td><span class="badge ${getStatusBadge(b.status)}">${b.status}</span></td>
+                    <td><span class="badge-status">${b.status}</span></td>
                     <td>${b.clientEmail}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning" onclick="editBooking(${idx})"><i class="fa fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteBooking(${b.id})"><i class="fa fa-trash"></i></button>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editBooking(${b.id})">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking(${b.id})">Delete</button>
                     </td>
                 </tr>`;
             });
+            $("#bookingTableBody").html(rows);
         }
-        $("#bookingTableBody").html(rows);
     }).fail(() => {
-        $("#bookingTableBody").html("<tr><td colspan='6' class='text-danger'>Error connecting to server.</td></tr>");
+        console.error("Backend connection failed.");
     });
 }
 
-// FORM SUBMIT
+// SAVE & UPDATE
 $("#bookingForm").submit(function (e) {
     e.preventDefault();
+
     const id = $("#bookingId").val();
-    const booking = {
+    const dto = {
+        id: id ? parseInt(id) : null,
         bookingDate: $("#bookingDate").val(),
         location: $("#location").val(),
         status: $("#status").val(),
         clientEmail: $("#clientEmail").val()
     };
-    if (id) {
-        booking.id = id;
-        updateBooking(booking);
-    } else {
-        saveBooking(booking);
-    }
+
+    const method = id ? "PUT" : "POST";
+    const url = id ? `${BASE_URL}/update` : `${BASE_URL}/save`;
+
+    $.ajax({
+        url: url,
+        method: method,
+        contentType: "application/json",
+        data: JSON.stringify(dto),
+        success: (res) => {
+            if (res.code === "00" || res.status === "success" || !res.code) {
+                alert(res.message || "Booking saved successfully!");
+                resetForm();
+                loadBookings();
+            } else {
+                alert("Error: " + res.message);
+            }
+        },
+        error: (xhr) => {
+            alert("Execution failed: " + (xhr.responseJSON?.message || "Check backend connection."));
+        }
+    });
 });
 
-// SAVE
-function saveBooking(booking) {
-    $.ajax({
-        url: `${BASE_URL}/save`,
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(booking),
-        success: () => { alert("Booking Saved!"); loadBookings(); resetForm(); },
-        error: (xhr) => { alert("Save failed: " + (xhr.responseJSON?.message || "Server error")); }
-    });
+// EDIT FUNCTION
+function editBooking(id) {
+    const b = bookingList.find(x => x.id === id);
+    if (b) {
+        $("#bookingId").val(b.id);
+        $("#bookingDate").val(b.bookingDate);
+        $("#location").val(b.location);
+        $("#status").val(b.status);
+        $("#clientEmail").val(b.clientEmail);
+
+        // UI Change to match User Management style
+        $("#saveBtn").text("Update").removeClass("btn-success").addClass("btn-primary");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
-// UPDATE
-function updateBooking(booking) {
-    $.ajax({
-        url: `${BASE_URL}/update`,
-        method: "PUT",
-        contentType: "application/json",
-        data: JSON.stringify(booking),
-        success: () => { alert("Booking Updated!"); loadBookings(); resetForm(); },
-        error: () => { alert("Update failed."); }
-    });
-}
-
-// DELETE
+// DELETE FUNCTION
 function deleteBooking(id) {
-    if (!confirm(`Are you sure you want to delete/cancel booking #${id}?`)) return;
-    $.ajax({
-        url: `${BASE_URL}/delete/${id}`,
-        method: "DELETE",
-        success: () => { alert("Booking deleted."); loadBookings(); },
-        error: () => { alert("Delete failed."); }
-    });
+    if (confirm("Permanently delete this booking?")) {
+        $.ajax({
+            url: `${BASE_URL}/delete/${id}`,
+            method: "DELETE",
+            success: (res) => {
+                alert(res.message || "Deleted");
+                loadBookings();
+            }
+        });
+    }
 }
 
-// EDIT
-function editBooking(idx) {
-    const b = bookingList[idx];
-    $("#bookingId").val(b.id);
-    $("#bookingDate").val(b.bookingDate);
-    $("#location").val(b.location);
-    $("#status").val(b.status);
-    $("#clientEmail").val(b.clientEmail);
-    $("#formTitle").text(`Update Booking #${b.id}`);
-    window.scrollTo(0, 0);
-}
-
-// RESET FORM
 function resetForm() {
     $("#bookingForm")[0].reset();
     $("#bookingId").val("");
-    $("#formTitle").text("Add New Booking");
-}
-
-// STATUS BADGE HELPER
-function getStatusBadge(status) {
-    if (status === 'CONFIRMED') return 'badge-success';
-    if (status === 'CANCELLED') return 'badge-danger';
-    return 'badge-secondary';
+    $("#saveBtn").text("Save").removeClass("btn-primary").addClass("btn-success");
 }
