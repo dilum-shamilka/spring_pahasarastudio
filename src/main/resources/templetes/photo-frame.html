@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pahasara Studio | Frame Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom:50px;}
+        .main-card { border:none; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.08); margin-bottom:30px;}
+        .btn-action { width:120px;}
+        table.table tbody tr:hover { background-color: rgba(0,0,0,0.03); transition:0.2s;}
+        .badge-material { padding:5px 12px; border-radius:20px; font-size:0.85rem; font-weight:600; background-color:#cfe2ff; color:#084298;}
+        .price-text { font-weight:700; color:#198754;}
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+    </div>
+
+    <h2 class="mb-4">🛒 Frame Store (Buy & Sell)</h2>
+
+    <!-- Add / Buy Frame Form -->
+    <div class="card main-card mb-4">
+        <div class="card-body">
+            <form id="frameForm">
+                <input type="hidden" id="frameId">
+                <div class="row g-3">
+                    <div class="col-md-4"><label class="form-label small fw-bold">Frame Name</label><input type="text" id="frameName" class="form-control" placeholder="e.g. Royal Gold" required></div>
+                    <div class="col-md-4"><label class="form-label small fw-bold">Material</label>
+                        <select id="material" class="form-select">
+                            <option value="Wood">Wood</option>
+                            <option value="Metal">Metal</option>
+                            <option value="Plastic">Plastic</option>
+                            <option value="Glass">Glass</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4"><label class="form-label small fw-bold">Size</label><input type="text" id="size" class="form-control" placeholder="e.g. 8x10 or 12x18" required></div>
+                    <div class="col-md-6"><label class="form-label small fw-bold">Unit Price (LKR)</label><input type="number" step="0.01" id="unitPrice" class="form-control" placeholder="0.00" required></div>
+                    <div class="col-md-6"><label class="form-label small fw-bold">Quantity</label><input type="number" id="qtyOnHand" class="form-control" placeholder="0" required></div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success btn-sm btn-action" id="saveBtn">Add / Buy</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-action" id="resetBtn">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sell Frame Form -->
+    <div class="card main-card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Sell Frame</h5>
+            <form id="sellForm" class="row g-3">
+                <div class="col-md-6"><label class="form-label small fw-bold">Select Frame</label><select id="sellFrameSelect" class="form-select" required></select></div>
+                <div class="col-md-6"><label class="form-label small fw-bold">Quantity to Sell</label><input type="number" id="sellQty" class="form-control" placeholder="0" required></div>
+                <div class="col-12"><button type="submit" class="btn btn-warning btn-sm btn-action">Sell Frame</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="card main-card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Inventory Stock</h5>
+            <table class="table table-hover mt-3">
+                <thead class="table-dark"><tr>
+                    <th>ID</th><th>Frame Description</th><th>Material</th><th>Size</th><th>Price</th><th>Qty</th><th class="text-center">Actions</th>
+                </tr></thead>
+                <tbody id="frameTableBody"></tbody>
+            </table>
+            <div id="noData" class="text-center text-muted py-4 d-none">No frames found in inventory.</div>
+        </div>
+    </div>
+
+    <!-- Selling History Table -->
+    <div class="card main-card">
+        <div class="card-body">
+            <h5 class="card-title">📝 Selling History</h5>
+            <table class="table table-hover mt-3">
+                <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Frame Name</th>
+                    <th>Material</th>
+                    <th>Size</th>
+                    <th>Quantity Sold</th>
+                    <th>Unit Price</th>
+                    <th>Total Price</th>
+                    <th>Time</th>
+                </tr>
+                </thead>
+                <tbody id="sellingHistoryBody"></tbody>
+                <tfoot id="noHistory" class="text-center text-muted py-4">
+                <tr><td colspan="8">No sales yet.</td></tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "http://localhost:8080/api/v1/photoframe";
+    const sellingHistory = [];
+
+    async function fetchFrames() {
+        try {
+            const res = await fetch(API_BASE);
+            const data = await res.json();
+            const tbody = document.getElementById("frameTableBody");
+            const noData = document.getElementById("noData");
+            const sellSelect = document.getElementById("sellFrameSelect");
+
+            tbody.innerHTML = "";
+            sellSelect.innerHTML = "<option value=''>Select Frame</option>";
+
+            if (data.length) {
+                noData.classList.add("d-none");
+                data.forEach(f => {
+                    tbody.innerHTML += `
+                    <tr>
+                        <td>#${f.id}</td>
+                        <td><strong>${f.frameName}</strong></td>
+                        <td><span class="badge-material">${f.material}</span></td>
+                        <td>${f.size}</td>
+                        <td class="price-text">Rs. ${f.unitPrice.toFixed(2)}</td>
+                        <td>${f.qtyOnHand}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editFrame(${f.id})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteFrame(${f.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                    sellSelect.innerHTML += `<option value="${f.id}">${f.frameName} (${f.qtyOnHand})</option>`;
+                });
+            } else noData.classList.remove("d-none");
+        } catch(e) { console.error(e); }
+        renderSellingHistory();
+    }
+
+    document.getElementById("frameForm").addEventListener("submit", async e=>{
+        e.preventDefault();
+        const id = document.getElementById("frameId").value;
+        const dto = {
+            frameName: document.getElementById("frameName").value,
+            material: document.getElementById("material").value,
+            size: document.getElementById("size").value,
+            unitPrice: parseFloat(document.getElementById("unitPrice").value),
+            qtyOnHand: parseInt(document.getElementById("qtyOnHand").value)
+        };
+        const endpoint = id ? `${API_BASE}/${id}` : API_BASE;
+        const method = id ? "PUT" : "POST";
+        try {
+            const res = await fetch(endpoint, {
+                method, headers:{"Content-Type":"application/json"}, body:JSON.stringify(dto)
+            });
+            if (!res.ok) throw new Error("Operation failed");
+            alert(id?"Frame updated!":"Frame added!");
+            resetForm(); fetchFrames();
+        } catch(e){ alert(e.message); console.error(e);}
+    });
+
+    document.getElementById("sellForm").addEventListener("submit", async e=>{
+        e.preventDefault();
+        const frameId = document.getElementById("sellFrameSelect").value;
+        const qty = parseInt(document.getElementById("sellQty").value);
+        if(!frameId) return alert("Select a frame.");
+        const frameRes = await fetch(`${API_BASE}/${frameId}`);
+        const frame = await frameRes.json();
+        if(qty>frame.qtyOnHand) return alert("Not enough stock.");
+
+        frame.qtyOnHand -= qty;
+
+        await fetch(`${API_BASE}/${frameId}`, {
+            method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(frame)
+        });
+
+        // Record in selling history
+        const now = new Date();
+        sellingHistory.unshift({
+            frameName: frame.frameName,
+            material: frame.material,
+            size: frame.size,
+            qtySold: qty,
+            unitPrice: frame.unitPrice,
+            totalPrice: qty * frame.unitPrice,
+            time: now.toLocaleString()
+        });
+
+        alert(`Sold ${qty} frame(s)!`);
+        document.getElementById("sellForm").reset();
+        fetchFrames();
+    });
+
+    function renderSellingHistory() {
+        const tbody = document.getElementById("sellingHistoryBody");
+        const noHistory = document.getElementById("noHistory");
+        tbody.innerHTML = "";
+        if(sellingHistory.length){
+            noHistory.style.display = "none";
+            sellingHistory.forEach((s, idx)=>{
+                tbody.innerHTML += `
+                <tr>
+                    <td>${idx+1}</td>
+                    <td>${s.frameName}</td>
+                    <td>${s.material}</td>
+                    <td>${s.size}</td>
+                    <td>${s.qtySold}</td>
+                    <td class="price-text">Rs. ${s.unitPrice.toFixed(2)}</td>
+                    <td class="price-text">Rs. ${s.totalPrice.toFixed(2)}</td>
+                    <td>${s.time}</td>
+                </tr>`;
+            });
+        } else noHistory.style.display = "";
+    }
+
+    async function editFrame(id){
+        const res = await fetch(`${API_BASE}/${id}`);
+        const f = await res.json();
+        document.getElementById("frameId").value = f.id;
+        document.getElementById("frameName").value = f.frameName;
+        document.getElementById("material").value = f.material;
+        document.getElementById("size").value = f.size;
+        document.getElementById("unitPrice").value = f.unitPrice;
+        document.getElementById("qtyOnHand").value = f.qtyOnHand;
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.innerText = "Update";
+        saveBtn.className="btn btn-primary btn-sm btn-action";
+    }
+
+    async function deleteFrame(id){
+        if(!confirm("Remove this frame?")) return;
+        try{
+            const res = await fetch(`${API_BASE}/${id}`, {method:"DELETE"});
+            if(!res.ok) throw new Error("Delete failed");
+            fetchFrames();
+        } catch(e){ alert(e.message); console.error(e);}
+    }
+
+    function resetForm(){
+        document.getElementById("frameId").value="";
+        document.getElementById("frameForm").reset();
+        const saveBtn=document.getElementById("saveBtn");
+        saveBtn.innerText="Add / Buy";
+        saveBtn.className="btn btn-success btn-sm btn-action";
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+    document.addEventListener("DOMContentLoaded", fetchFrames);
+</script>
+</body>
+</html>
