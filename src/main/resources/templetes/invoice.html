@@ -4,14 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pahasara Studio | Invoice System</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/invoice.css">
+
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+
+        .main-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            font-weight: 600;
+        }
+
+        table.table tbody tr:hover {
+            background-color: rgba(0,0,0,0.03);
+            transition: background-color 0.2s;
+        }
+
+        table.table td,
+        table.table th {
+            vertical-align: middle;
+        }
+
+        .btn-action {
+            min-width: 100px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .bg-paid {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .bg-unpaid {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        @media (max-width: 768px) {
+            .btn-action {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
 </head>
 <body>
 
 <div class="container py-5">
+
     <div class="text-center mb-5">
-        <h2 class="fw-bold">Billing & Invoices</h2>
+        <h2 class="fw-bold">💰Billing & Invoices</h2>
         <p class="text-muted">Manage studio bookings and payments</p>
     </div>
 
@@ -23,23 +81,29 @@
         <div class="card-body p-4">
             <form id="invoiceForm">
                 <input type="hidden" id="invoiceId">
+
                 <div class="row g-3">
+
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Invoice Number</label>
                         <input type="text" id="invoiceNumber" class="form-control" placeholder="e.g. INV-1001" required>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Booking ID</label>
                         <input type="number" id="bookingId" class="form-control" placeholder="Reference ID" required>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Billing Date</label>
                         <input type="date" id="invoiceDate" class="form-control" required>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Total Amount (LKR)</label>
                         <input type="number" step="0.01" id="totalAmount" class="form-control" placeholder="0.00" required>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Payment Status</label>
                         <select id="paymentStatus" class="form-select">
@@ -47,11 +111,13 @@
                             <option value="PAID">PAID</option>
                         </select>
                     </div>
+
                     <div class="col-md-9 d-flex align-items-end justify-content-end gap-2">
                         <button type="button" class="btn btn-secondary btn-action" onclick="resetUI()">Clear</button>
                         <button type="submit" id="btnSave" class="btn btn-success btn-action">Save</button>
                         <button type="button" id="btnUpdate" class="btn btn-primary btn-action d-none" onclick="updateInvoice()">Update</button>
                     </div>
+
                 </div>
             </form>
         </div>
@@ -60,7 +126,7 @@
     <!-- Invoice Table -->
     <div class="card main-card">
         <div class="card-body p-0">
-            <table class="table table-hover mb-0">
+            <table class="table table-bordered table-striped mb-0">
                 <thead class="table-dark">
                 <tr>
                     <th class="ps-4">Inv #</th>
@@ -76,11 +142,15 @@
             </table>
         </div>
     </div>
+
 </div>
+
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- KEEPING YOUR ORIGINAL JS FILE -->
 <script src="/static/js/invoice.js"></script>
+
 </body>
 </html>
