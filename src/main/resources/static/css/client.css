@@ -1,83 +1,82 @@
-/* -----------------------------
-   Body & Font
-------------------------------*/
 body {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background-color: #f1f3f5;
     font-family: 'Poppins', sans-serif;
-    min-height: 100vh;
 }
 
-/* -----------------------------
-   Container
-------------------------------*/
-.main-container {
-    margin-top: 60px;
-    margin-bottom: 60px;
+.custom-panel {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-/* -----------------------------
-   Card
-------------------------------*/
-.card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-
-.card-header {
-    border-radius: 15px 15px 0 0 !important;
-    font-weight: 600;
-    font-size: 18px;
-}
-
-/* -----------------------------
-   Form Inputs
-------------------------------*/
 .form-control {
-    border-radius: 10px;
+    border-radius: 6px;
+    padding: 10px 15px;
+    height: auto;
+    border: 1px solid #ced4da;
+    background-color: #fdfdfd;
 }
 
-/* -----------------------------
-   Buttons
-------------------------------*/
-.btn {
-    border-radius: 25px;
-    padding: 6px 20px;
-    font-weight: 500;
-    transition: 0.3s;
+/* Green Save Button */
+.btn-save {
+    background-color: #2d5a44;
+    color: white;
+    border: none;
 }
+.btn-save:hover { background-color: #234735; color: white; }
 
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+/* Gray Reset Button */
+.btn-reset {
+    background-color: #5a6268;
+    color: white;
+    border: none;
 }
+.btn-reset:hover { background-color: #4e555b; color: white; }
 
-/* -----------------------------
-   Table
-------------------------------*/
-.table thead {
-    background: linear-gradient(to right, #667eea, #764ba2);
+/* Blue Update Button */
+.btn-update {
+    background-color: #007bff;
+    color: white;
+    border: none;
+}
+.btn-update:hover { background-color: #0069d9; color: white; }
+
+/* Table Styling */
+.custom-table thead {
+    background-color: #212529;
     color: white;
 }
 
-tr {
-    cursor: pointer;
-    transition: 0.2s;
+.custom-table thead th {
+    border: none;
+    padding: 12px;
 }
 
-tr:hover {
-    background-color: #f1f1f1;
+.badge-role {
+    background-color: #f8f9fa;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
 }
 
-/* -----------------------------
-   Title Box
-------------------------------*/
-.title-box {
-    text-align: center;
-    color: white;
-    margin-bottom: 30px;
+/* Edit and Delete UI Buttons */
+.btn-edit-ui {
+    color: #007bff;
+    background: #f0f7ff;
+    border: 1px solid #d1e5fb;
+    border-radius: 4px;
+    padding: 2px 12px;
+    font-size: 0.85rem;
 }
 
-.title-box h2 {
-    font-weight: 700;
+.btn-delete-ui {
+    color: #dc3545;
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 4px;
+    padding: 2px 12px;
+    font-size: 0.85rem;
 }
