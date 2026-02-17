@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pahasara Studio | Indoor Location Booking</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap & Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+
+        .main-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .card-header-custom {
+            font-weight: 600;
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 1.25rem;
+            border-radius: 15px 15px 0 0;
+        }
+
+        table.table tbody tr:hover {
+            background-color: rgba(0,0,0,0.03);
+            cursor: pointer;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .bg-booked { background-color: #d1e7dd; color: #0f5132; }
+        .bg-completed { background-color: #cff4fc; color: #055160; }
+        .bg-cancelled { background-color: #f8d7da; color: #842029; }
+
+        .btn-action { width: 100px; }
+
+        @media (max-width: 768px) {
+            .btn-action { width: 100%; margin-bottom: 5px; }
+        }
+
+        /* Dashboard Button */
+        .nav-buttons .btn { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+
+    <!-- Dashboard Button -->
+    <div class="nav-buttons">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <h2 class="mb-4">🏠 Indoor Location Booking</h2>
+
+    <!-- BOOKING FORM CARD -->
+    <div class="card main-card mb-4">
+        <div class="card-header-custom">
+            <h5 class="mb-0" id="formHeader">Booking Details</h5>
+        </div>
+        <div class="card-body">
+            <form id="bookingForm">
+                <input type="hidden" id="bookingId">
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Location Name</label>
+                        <input type="text" id="locationName" class="form-control" placeholder="e.g. Studio A" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Customer Name</label>
+                        <input type="text" id="customerName" class="form-control" placeholder="Full Name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Contact Number</label>
+                        <input type="text" id="contactNumber" class="form-control" placeholder="Phone Number" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Booking Date</label>
+                        <input type="date" id="bookingDate" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Start Time</label>
+                        <input type="time" id="startTime" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">End Time</label>
+                        <input type="time" id="endTime" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Price (Rs.)</label>
+                        <input type="number" id="price" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Status</label>
+                        <select id="status" class="form-select">
+                            <option value="BOOKED">BOOKED</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="button" class="btn btn-success btn-sm btn-action" id="saveBtn" onclick="saveBooking()">Save</button>
+                    <button type="button" class="btn btn-primary btn-sm btn-action d-none" id="updateBtn" onclick="updateBooking()">Update</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-action" onclick="clearForm()">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BOOKING TABLE CARD -->
+    <div class="card main-card">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Indoor Bookings List</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Location</th>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="bookingTable"></tbody>
+                </table>
+            </div>
+            <div id="noData" class="text-center text-muted py-4 d-none">No records found.</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let bookings = [];
+    let editingId = null;
+
+    function renderBookings() {
+        const tbody = document.getElementById('bookingTable');
+        tbody.innerHTML = '';
+
+        if(bookings.length === 0) {
+            document.getElementById('noData').classList.remove('d-none');
+            return;
+        } else {
+            document.getElementById('noData').classList.add('d-none');
+        }
+
+        bookings.forEach(b => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${b.id}</td>
+                <td>${b.locationName}</td>
+                <td>${b.customerName}</td>
+                <td>${b.contactNumber}</td>
+                <td>${b.bookingDate}</td>
+                <td>${b.startTime} - ${b.endTime}</td>
+                <td>Rs. ${b.price}</td>
+                <td>
+                    <span class="status-badge ${b.status === 'BOOKED' ? 'bg-booked' : b.status === 'COMPLETED' ? 'bg-completed' : 'bg-cancelled'}">
+                        ${b.status}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editBooking(${b.id})">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking(${b.id})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function saveBooking() {
+        const booking = {
+            id: bookings.length + 1,
+            locationName: document.getElementById('locationName').value,
+            customerName: document.getElementById('customerName').value,
+            contactNumber: document.getElementById('contactNumber').value,
+            bookingDate: document.getElementById('bookingDate').value,
+            startTime: document.getElementById('startTime').value,
+            endTime: document.getElementById('endTime').value,
+            price: parseFloat(document.getElementById('price').value),
+            status: document.getElementById('status').value
+        };
+        bookings.push(booking);
+        renderBookings();
+        clearForm();
+    }
+
+    function editBooking(id) {
+        const booking = bookings.find(b => b.id === id);
+        if(!booking) return;
+
+        editingId = id;
+        document.getElementById('bookingId').value = booking.id;
+        document.getElementById('locationName').value = booking.locationName;
+        document.getElementById('customerName').value = booking.customerName;
+        document.getElementById('contactNumber').value = booking.contactNumber;
+        document.getElementById('bookingDate').value = booking.bookingDate;
+        document.getElementById('startTime').value = booking.startTime;
+        document.getElementById('endTime').value = booking.endTime;
+        document.getElementById('price').value = booking.price;
+        document.getElementById('status').value = booking.status;
+
+        document.getElementById('saveBtn').classList.add('d-none');
+        document.getElementById('updateBtn').classList.remove('d-none');
+    }
+
+    function updateBooking() {
+        const booking = bookings.find(b => b.id === editingId);
+        if(!booking) return;
+
+        booking.locationName = document.getElementById('locationName').value;
+        booking.customerName = document.getElementById('customerName').value;
+        booking.contactNumber = document.getElementById('contactNumber').value;
+        booking.bookingDate = document.getElementById('bookingDate').value;
+        booking.startTime = document.getElementById('startTime').value;
+        booking.endTime = document.getElementById('endTime').value;
+        booking.price = parseFloat(document.getElementById('price').value);
+        booking.status = document.getElementById('status').value;
+
+        renderBookings();
+        clearForm();
+    }
+
+    function deleteBooking(id) {
+        bookings = bookings.filter(b => b.id !== id);
+        renderBookings();
+    }
+
+    function clearForm() {
+        document.getElementById('bookingForm').reset();
+        editingId = null;
+        document.getElementById('saveBtn').classList.remove('d-none');
+        document.getElementById('updateBtn').classList.add('d-none');
+    }
+
+    document.addEventListener('DOMContentLoaded', renderBookings);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
