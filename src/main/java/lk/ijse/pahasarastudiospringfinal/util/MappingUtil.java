@@ -361,5 +361,15 @@ public class MappingUtil {
                 dto.getQtyOnHand()
         );
     }
+    // ============================================================
+    // SAFE GENERIC LIST MAPPER (NEW)
+    // ============================================================
+
+    public <E, D> List<D> mapList(List<E> entityList, java.util.function.Function<E, D> mapper) {
+        if (entityList == null) return List.of();
+        return entityList.stream()
+                .map(mapper)
+                .collect(Collectors.toList());
+    }
 
 }

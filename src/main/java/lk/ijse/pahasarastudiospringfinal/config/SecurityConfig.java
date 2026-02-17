@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/services/**").permitAll()
                         .requestMatchers("/api/v1/invoices/**").permitAll()
                         .requestMatchers("/api/v1/costs/**").permitAll()
+                        .requestMatchers("/api/v1/indoor-booking/**").permitAll()
                         .requestMatchers("/api/v1/albums/**").permitAll()
                         .requestMatchers("/api/v1/photoframe/**").permitAll() // Fixed endpoint
                         .requestMatchers("/api/v1/payment/**").permitAll()
