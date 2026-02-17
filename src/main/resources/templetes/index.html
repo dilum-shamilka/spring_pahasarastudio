@@ -4,72 +4,174 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pahasara Studio | Welcome</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-  <style>
-    :root { --primary-dark: #0f172a; --accent-blue: #2563eb; }
-    body { font-family: 'Inter', sans-serif; background: #ffffff; margin: 0; }
 
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-dark: #0f172a;
+      /* Changed from blue to a sophisticated Studio Gold/Amber */
+      --accent-gold: #d4a373;
+      --accent-gold-hover: #bc8a5f;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background-color: var(--primary-dark);
+    }
+
+    /* ================= NAVBAR ================= */
+    .navbar {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      padding: 15px 0;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .navbar-brand {
+      font-weight: 800;
+      color: white !important;
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+    }
+
+    /* Target the "STUDIO" part of the name */
+    .brand-accent {
+      color: var(--accent-gold) !important;
+    }
+
+    /* ================= HERO SECTION ================= */
     .hero-section {
+      position: relative;
       height: 100vh;
-      background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)),
-      url('https://images.unsplash.com/photo-1520333789090-1afc82db536a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
-      background-size: cover;
-      background-position: center;
+      min-height: 600px;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
       color: white;
+      overflow: hidden;
     }
 
-    .hero-content h1 { font-size: 4rem; fw-bold; letter-spacing: -1px; }
-    .hero-content p { font-size: 1.25rem; color: #cbd5e1; margin-bottom: 30px; }
+    .hero-section::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      /* Darker overlay to let the gold pop */
+      background: linear-gradient(rgba(10, 15, 28, 0.7), rgba(10, 15, 28, 0.85)),
+      url('https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+      z-index: -1;
+      animation: zoomEffect 20s ease-in-out infinite alternate;
+    }
 
+    @keyframes zoomEffect {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    /* ================= HERO CONTENT ================= */
+    .hero-content {
+      opacity: 0;
+      animation: fadeUp 1.2s ease-out forwards;
+      padding: 0 20px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-content h1 {
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -1px;
+    }
+
+    .hero-content p {
+      font-size: 1.1rem;
+      color: #cdd4dd; /* Subtler gray */
+      max-width: 600px;
+      margin: 0 auto 30px;
+    }
+
+    /* ================= BUTTONS ================= */
     .btn-get-started {
-      padding: 15px 40px;
+      padding: 14px 40px;
       font-size: 1.1rem;
       font-weight: 600;
       border-radius: 50px;
-      background-color: var(--accent-blue);
+      background-color: var(--accent-gold);
       border: none;
-      transition: 0.3s;
-      text-decoration: none;
-      color: white;
+      color: #1a1a1a; /* Darker text on gold for better contrast */
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(212, 163, 115, 0.2);
     }
 
     .btn-get-started:hover {
-      background-color: #1d4ed8;
+      background-color: var(--accent-gold-hover);
       transform: translateY(-3px);
-      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 8px 30px rgba(212, 163, 115, 0.4);
+      color: #000;
     }
 
-    .navbar { background: transparent; position: absolute; width: 100%; top: 0; padding: 20px 0; }
-    .navbar-brand { font-weight: 800; color: white !important; font-size: 1.5rem; }
+    .btn-login {
+      border-radius: 50px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      font-weight: 500;
+      transition: 0.3s;
+      color: white !important;
+    }
+
+    .btn-login:hover {
+      background: white;
+      color: var(--primary-dark) !important;
+      border-color: white;
+    }
+
+    @media (max-width: 576px) {
+      .hero-content h1 { font-size: 2.2rem; }
+    }
   </style>
 </head>
+
 <body>
 
 <nav class="navbar">
-  <div class="container">
-    <a class="navbar-brand" href="#">PAHASARA <span class="text-primary">STUDIO</span></a>
-    <div class="d-flex">
-      <a href="loginRegister.html" class="btn btn-outline-light px-4 rounded-pill">Login</a>
-    </div>
+  <div class="container d-flex justify-content-between align-items-center">
+    <a class="navbar-brand" href="#">
+      PAHASARA <span class="brand-accent">STUDIO</span>
+    </a>
+    <a href="loginRegister.html" class="btn btn-login px-4">Login</a>
   </div>
 </nav>
 
 <section class="hero-section">
   <div class="container hero-content">
-    <h1 class="display-2 fw-bold mb-3">Capturing Moments,<br>Creating Memories</h1>
-    <p>The ultimate management solution for modern photography studios.</p>
-    <div class="mt-4">
-      <a href=loginRegister.html class="btn btn-get-started">
-        Get Started <i class="bi bi-arrow-right ms-2"></i>
-      </a>
-    </div>
+    <h1 class="display-4 mb-3">
+      Capturing Moments,<br>Creating Memories
+    </h1>
+    <p>
+      Elevate your artistry with a seamless management experience. From the first shutter click to the final gallery delivery, manage your passion with precision
+    </p>
+    <a href="loginRegister.html" class="btn btn-get-started">
+      Get Started <i class="bi bi-arrow-right ms-2"></i>
+    </a>
   </div>
 </section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

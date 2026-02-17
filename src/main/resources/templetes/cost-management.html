@@ -5,7 +5,9 @@
     <title>Pahasara Studio | Cost Management</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Bootstrap & Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
     <style>
         body {
@@ -58,13 +60,27 @@
                 margin-bottom: 5px;
             }
         }
+
+        /* Navigation Button */
+        .nav-buttons .btn {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container mt-5">
+
+    <!-- Dashboard Navigation Button -->
+    <div class="mb-3 nav-buttons">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
     <h2 class="mb-4">💰 Cost Management</h2>
 
+    <!-- COST ENTRY FORM -->
     <div class="card main-card mb-4">
         <div class="card-body">
             <h5 class="card-title mb-4 card-header-title">Record New Expenses</h5>
@@ -141,6 +157,7 @@
         </div>
     </div>
 
+    <!-- COST HISTORY TABLE -->
     <div class="card main-card">
         <div class="card-body">
             <h5 class="card-title card-header-title">Expense History</h5>
@@ -251,8 +268,6 @@
 
     async function editCost(id) {
         try {
-            // Finding the item from the table or calling a "get by id" endpoint
-            // Assuming we fetch all and find the one (or you can add a getById endpoint)
             const res = await fetch(`${API_BASE}/all`);
             const data = await res.json();
             const c = data.find(item => item.costId === id);

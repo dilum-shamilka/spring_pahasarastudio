@@ -27,10 +27,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configure(http)) // Enable CORS support
+                .cors(cors -> {}) // Enable CORS
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**").permitAll()   // Login endpoint
-                        .requestMatchers("/api/v1/users/save").permitAll() // Signup endpoint
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/users/save").permitAll()
                         .requestMatchers("/api/v1/users/**").permitAll()
                         .requestMatchers("/api/v1/email/**").permitAll()
                         .requestMatchers("/api/v1/clients/**").permitAll()
@@ -39,11 +39,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/equipment/**").permitAll()
                         .requestMatchers("/api/v1/services/**").permitAll()
                         .requestMatchers("/api/v1/invoices/**").permitAll()
-                        // Inside SecurityConfig.java -> filterChain method
                         .requestMatchers("/api/v1/costs/**").permitAll()
                         .requestMatchers("/api/v1/albums/**").permitAll()
-                        //.requestMatchers("/api/v1/albums/upload/**").permitAll()
-                       //.requestMatchers("/api/v1/albums/all").permitAll()
+                        .requestMatchers("/api/v1/photoframe/**").permitAll() // Fixed endpoint
                         .requestMatchers("/api/v1/payment/**").permitAll()
                         .requestMatchers("/api/v1/photographers/**").permitAll()
                         .requestMatchers("/css/**","/js/**","/images/**").permitAll()

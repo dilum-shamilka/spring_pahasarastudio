@@ -337,5 +337,29 @@ public class MappingUtil {
 
         return entity;
     }
+    // ==================== PHOTO FRAME MAPPINGS ====================
+    public PhotoFrameDTO toPhotoFrameDTO(PhotoFrame entity) {
+        if (entity == null) return null;
+        return new PhotoFrameDTO(
+                entity.getId(),
+                entity.getFrameName(),
+                entity.getMaterial(),
+                entity.getSize(),
+                entity.getUnitPrice(),
+                entity.getQtyOnHand()
+        );
+    }
+
+    public PhotoFrame toPhotoFrameEntity(PhotoFrameDTO dto) {
+        if (dto == null) return null;
+        return new PhotoFrame(
+                dto.getId(), // null if creating new
+                dto.getFrameName(),
+                dto.getMaterial(),
+                dto.getSize(),
+                dto.getUnitPrice(),
+                dto.getQtyOnHand()
+        );
+    }
 
 }
