@@ -1,145 +1,139 @@
 const BASE_URL = "http://localhost:8080/api/v1/equipment";
 
 $(document).ready(() => {
-    getAllEquipment();
-
-    $("#btnSave").click(saveEquipment);
-    $("#btnUpdate").click(updateEquipment);
-    $("#btnDelete").click(deleteEquipment);
-    $("#btnClear").click(resetForm);
+    fetchEquipment();
+    $("#resetBtn").click(resetForm);
 });
 
-// ================= GET ALL EQUIPMENT =================
-function getAllEquipment() {
-    $.get(`${BASE_URL}/getAll`, (response) => {
-        const tableBody = $("#equipmentTableBody");
-        tableBody.empty();
+// ================= FETCH ALL =================
+async function fetchEquipment() {
+    try {
+        const res = await fetch(`${BASE_URL}/getAll`);
+        const data = await res.json();
+        const tbody = $("#equipmentTableBody");
+        const noData = $("#noData");
+        tbody.empty();
 
-        const equipment = response.content || [];
-
-        if (equipment.length > 0) {
-            equipment.forEach(e => {
-                const badgeClass = e.status === 'AVAILABLE' ? 'badge-available' :
-                    e.status === 'REPAIRING' ? 'badge-repairing' : 'badge-retired';
-
-                const row = $(`
-                    <tr id="row-${e.id}" class="tr-clickable" 
-                        onclick="selectEquipment(${e.id}, '${e.itemName}', '${e.serialNumber}', '${e.status}')">
-                        <td class="ps-4 fw-bold text-muted">#${e.id}</td>
-                        <td class="fw-semibold">${e.itemName}</td>
-                        <td class="text-muted">${e.serialNumber}</td>
-                        <td><span class="status-badge ${badgeClass}">${e.status}</span></td>
-                    </tr>
-                `);
-                row.hide().appendTo(tableBody).fadeIn(200);
+        // Check for '00' success code or standard array
+        if (data.content && data.content.length > 0) {
+            noData.addClass("d-none");
+            data.content.forEach(e => {
+                tbody.append(`
+                    <tr id="row-${e.id}">
+                        <td>#${e.id}</td>
+                        <td class="fw-bold">${e.itemName}</td>
+                        <td>${e.serialNumber}</td>
+                        <td><span class="status-badge">${e.status}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editEquipment(${e.id})">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment(${e.id})">Delete</button>
+                        </td>
+                    </tr>`);
             });
         } else {
-            tableBody.append("<tr><td colspan='4' class='py-4 text-muted'>No records found in inventory</td></tr>");
+            noData.removeClass("d-none");
         }
-    }).fail(() => {
-        $("#equipmentTableBody").html("<tr><td colspan='4' class='py-4 text-danger'>Error fetching equipment</td></tr>");
-    });
+    } catch (err) {
+        console.error("Server error:", err);
+    }
 }
 
-// ================= SAVE EQUIPMENT =================
-function saveEquipment() {
-    const data = {
+// ================= SAVE / UPDATE =================
+document.getElementById("equipmentForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const id = $("#equipmentId").val();
+    const dto = {
+        id: id ? parseInt(id) : null,
         itemName: $("#itemName").val().trim(),
         serialNumber: $("#serialNumber").val().trim(),
         status: $("#status").val(),
         equipmentImages: []
     };
 
-    if (!data.itemName || !data.serialNumber) return alert("Item Name & Serial Number are required");
+    const endpoint = id ? `${BASE_URL}/update` : `${BASE_URL}/save`;
+    const method = id ? "PUT" : "POST";
 
-    $.ajax({
-        url: `${BASE_URL}/save`,
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(data),
-        success: res => {
-            alert(res.message || "Saved Successfully");
+    try {
+        const res = await fetch(endpoint, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto)
+        });
+
+        const result = await res.json();
+
+        if (res.ok || result.code === "00") {
+            alert(result.message || "Operation Successful");
             resetForm();
-            getAllEquipment();
-        },
-        error: err => alert("Error saving equipment: " + err.responseText)
-    });
-}
-
-// ================= UPDATE EQUIPMENT =================
-function updateEquipment() {
-    const id = $("#equipmentId").val();
-    if (!id) return alert("Select an item to update");
-
-    const data = {
-        id: parseInt(id),
-        itemName: $("#itemName").val().trim(),
-        serialNumber: $("#serialNumber").val().trim(),
-        status: $("#status").val()
-    };
-
-    $.ajax({
-        url: `${BASE_URL}/update`,
-        method: "PUT",
-        contentType: "application/json",
-        data: JSON.stringify(data),
-        success: res => {
-            alert(res.message || "Updated Successfully");
-            resetForm();
-            getAllEquipment();
-        },
-        error: err => alert("Error updating equipment: " + err.responseText)
-    });
-}
-
-// ================= DELETE EQUIPMENT =================
-function deleteEquipment() {
-    const id = $("#equipmentId").val();
-    if (!id) return alert("Select an item first");
-    if (!confirm("Permanently remove this equipment?")) return;
-
-    $.ajax({
-        url: `${BASE_URL}/delete/${id}`,
-        method: "DELETE",
-        success: res => {
-            if (res.code === "00" || res.code === "SUCCESS") {
-                // Remove row instantly from table
-                $(`#row-${id}`).fadeOut(200, function() { $(this).remove(); });
-                alert(res.message || "Deleted Successfully");
-                resetForm();
-
-                // If table empty, show placeholder
-                if ($("#equipmentTableBody tr").length === 0) {
-                    $("#equipmentTableBody").append("<tr><td colspan='4' class='py-4 text-muted'>No records found in inventory</td></tr>");
-                }
-            } else {
-                alert(res.message || "Deletion failed");
-            }
-        },
-        error: err => {
-            alert("Server Error: " + err.responseText);
+            fetchEquipment();
+        } else {
+            alert("Error: " + result.message);
         }
-    });
+    } catch (err) {
+        alert("Connection error.");
+    }
+});
+
+// ================= EDIT (FIXED) =================
+async function editEquipment(id) {
+    try {
+        // Double-check if your backend uses /get/ID or /search/ID
+        const res = await fetch(`${BASE_URL}/get/${id}`);
+        const data = await res.json();
+
+        // Check both '00' code and standard success response
+        if (data.code === "00" || data.content) {
+            const e = data.content;
+
+            // Populate Form Fields
+            $("#equipmentId").val(e.id);
+            $("#itemName").val(e.itemName);
+            $("#serialNumber").val(e.serialNumber);
+            $("#status").val(e.status);
+
+            // Change Save Button to Update Mode
+            $("#saveBtn").text("Update")
+                .removeClass("btn-success")
+                .addClass("btn-primary");
+
+            // Smooth scroll to form
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            alert("Equipment details not found.");
+        }
+    } catch (err) {
+        console.error("Edit error:", err);
+        alert("Error loading item details.");
+    }
 }
 
-// ================= SELECT EQUIPMENT =================
-function selectEquipment(id, name, sn, status) {
-    $(".tr-clickable").removeClass("selected-row");
-    $(`#row-${id}`).addClass("selected-row");
+// ================= DELETE =================
+async function deleteEquipment(id) {
+    if (confirm("Permanently delete this equipment?")) {
+        try {
+            const res = await fetch(`${BASE_URL}/delete/${id}`, { method: "DELETE" });
+            const result = await res.json();
 
-    $("#equipmentId").val(id);
-    $("#itemName").val(name);
-    $("#serialNumber").val(sn);
-    $("#status").val(status);
-    $("#formHeader").text("Editing: " + name);
+            if (res.ok || result.code === "00") {
+                alert(result.message || "Deleted Successfully");
+                fetchEquipment();
+            } else {
+                alert("Delete failed: " + result.message);
+            }
+        } catch (err) {
+            alert("Delete failed due to connection error.");
+        }
+    }
 }
 
-// ================= RESET FORM =================
+// ================= RESET =================
 function resetForm() {
-    $(".tr-clickable").removeClass("selected-row");
-    $("#equipmentId").val("");
-    $("#itemName").val("");
-    $("#serialNumber").val("");
-    $("#status").val("AVAILABLE");
-    $("#formHeader").text("Equipment Details");
+    $("#equipmentId").val(""); // Explicitly clear hidden ID
+    $("#equipmentForm")[0].reset(); // Reset visible fields
+
+    // Revert Button UI
+    $("#saveBtn").text("Save")
+        .removeClass("btn-primary")
+        .addClass("btn-success");
 }
