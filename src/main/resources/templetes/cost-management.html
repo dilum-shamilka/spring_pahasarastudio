@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pahasara Studio | Cost Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+
+        .main-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .btn-action {
+            width: 110px;
+        }
+
+        table.table tbody tr:hover {
+            background-color: rgba(0,0,0,0.03);
+            transition: background-color 0.2s;
+        }
+
+        table.table td, table.table th {
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+
+        .card-header-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .cost-input-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+
+        .currency-symbol {
+            font-weight: bold;
+            color: #198754;
+        }
+
+        @media (max-width: 768px) {
+            .btn-action {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="mb-4">💰 Cost Management</h2>
+
+    <div class="card main-card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-4 card-header-title">Record New Expenses</h5>
+            <form id="costForm">
+                <input type="hidden" id="costId">
+
+                <div class="row g-3">
+                    <div class="col-md-3 cost-input-group">
+                        <label>Date</label>
+                        <input type="date" id="costDate" class="form-control" required>
+                    </div>
+                    <div class="col-md-9 cost-input-group">
+                        <label>Description / Note</label>
+                        <input type="text" id="description" class="form-control" placeholder="e.g., Monthly Studio Operational Costs">
+                    </div>
+
+                    <div class="col-md-3 cost-input-group">
+                        <label>Staff Salary (P/V)</label>
+                        <div class="input-group">
+                            <span class="input-group-text currency-symbol">Rs.</span>
+                            <input type="number" id="staffSalary" class="form-control" value="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="col-md-3 cost-input-group">
+                        <label>Equipment Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text currency-symbol">Rs.</span>
+                            <input type="number" id="equipmentCost" class="form-control" value="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="col-md-3 cost-input-group">
+                        <label>Monthly Shoots Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text currency-symbol">Rs.</span>
+                            <input type="number" id="monthlyShootsCost" class="form-control" value="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="col-md-3 cost-input-group">
+                        <label>Vehicle Oil Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text currency-symbol">Rs.</span>
+                            <input type="number" id="vehicleOilCost" class="form-control" value="0.00" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 cost-input-group">
+                        <label>Inventory Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text currency-symbol">Rs.</span>
+                            <input type="number" id="inventoryCost" class="form-control" value="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="col-md-4 cost-input-group">
+                        <label>Editing Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text currency-symbol">Rs.</span>
+                            <input type="number" id="editCost" class="form-control" value="0.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="col-md-4 cost-input-group">
+                        <label>Print Cost</label>
+                        <div class="input-group">
+                            <span class="input-group-text currency-symbol">Rs.</span>
+                            <input type="number" id="printCost" class="form-control" value="0.00" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success btn-sm btn-action" id="saveBtn">Save Cost</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-action" id="resetBtn">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card main-card">
+        <div class="card-body">
+            <h5 class="card-title card-header-title">Expense History</h5>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped mt-3">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Staff Sal.</th>
+                        <th>Equip.</th>
+                        <th>Oil</th>
+                        <th>Edit</th>
+                        <th>Print</th>
+                        <th>Inv.</th>
+                        <th>Total</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="costTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="noData" class="text-center text-muted py-4 d-none">
+                No cost records found.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "http://localhost:8080/api/v1/costs";
+
+    async function fetchCosts() {
+        try {
+            const res = await fetch(`${API_BASE}/all`);
+            const data = await res.json();
+            const tbody = document.getElementById("costTableBody");
+            const noData = document.getElementById("noData");
+            tbody.innerHTML = "";
+
+            if (data && data.length > 0) {
+                noData.classList.add("d-none");
+                data.forEach(c => {
+                    const total = (c.staffSalary + c.equipmentCost + c.monthlyShootsCost + c.vehicleOilCost + c.inventoryCost + c.editCost + c.printCost).toFixed(2);
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${c.date}</td>
+                            <td>${c.staffSalary}</td>
+                            <td>${c.equipmentCost}</td>
+                            <td>${c.vehicleOilCost}</td>
+                            <td>${c.editCost}</td>
+                            <td>${c.printCost}</td>
+                            <td>${c.inventoryCost}</td>
+                            <td class="fw-bold text-success">${total}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editCost(${c.costId})">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCost(${c.costId})">Delete</button>
+                            </td>
+                        </tr>`;
+                });
+            } else {
+                noData.classList.remove("d-none");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Backend server not responding.");
+        }
+    }
+
+    document.getElementById("costForm").addEventListener("submit", async e => {
+        e.preventDefault();
+
+        const id = document.getElementById("costId").value;
+        const dto = {
+            costId: id ? parseInt(id) : null,
+            date: document.getElementById("costDate").value,
+            description: document.getElementById("description").value,
+            staffSalary: parseFloat(document.getElementById("staffSalary").value) || 0,
+            equipmentCost: parseFloat(document.getElementById("equipmentCost").value) || 0,
+            monthlyShootsCost: parseFloat(document.getElementById("monthlyShootsCost").value) || 0,
+            vehicleOilCost: parseFloat(document.getElementById("vehicleOilCost").value) || 0,
+            inventoryCost: parseFloat(document.getElementById("inventoryCost").value) || 0,
+            editCost: parseFloat(document.getElementById("editCost").value) || 0,
+            printCost: parseFloat(document.getElementById("printCost").value) || 0
+        };
+
+        const endpoint = id ? `${API_BASE}/update` : `${API_BASE}/save`;
+        const method = id ? "PUT" : "POST";
+
+        try {
+            const res = await fetch(endpoint, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto)
+            });
+
+            if (res.ok) {
+                alert(id ? "Record Updated" : "Record Saved");
+                resetForm();
+                fetchCosts();
+            }
+        } catch (e) {
+            alert("Connection error.");
+        }
+    });
+
+    async function editCost(id) {
+        try {
+            // Finding the item from the table or calling a "get by id" endpoint
+            // Assuming we fetch all and find the one (or you can add a getById endpoint)
+            const res = await fetch(`${API_BASE}/all`);
+            const data = await res.json();
+            const c = data.find(item => item.costId === id);
+
+            if (c) {
+                document.getElementById("costId").value = c.costId;
+                document.getElementById("costDate").value = c.date;
+                document.getElementById("description").value = c.description;
+                document.getElementById("staffSalary").value = c.staffSalary;
+                document.getElementById("equipmentCost").value = c.equipmentCost;
+                document.getElementById("monthlyShootsCost").value = c.monthlyShootsCost;
+                document.getElementById("vehicleOilCost").value = c.vehicleOilCost;
+                document.getElementById("inventoryCost").value = c.inventoryCost;
+                document.getElementById("editCost").value = c.editCost;
+                document.getElementById("printCost").value = c.printCost;
+
+                const saveBtn = document.getElementById("saveBtn");
+                saveBtn.innerText = "Update Cost";
+                saveBtn.className = "btn btn-primary btn-sm btn-action";
+            }
+        } catch (e) {
+            alert("Error loading record.");
+        }
+    }
+
+    async function deleteCost(id) {
+        if (confirm("Delete this expense record?")) {
+            try {
+                const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+                if (res.ok) {
+                    alert("Deleted Successfully");
+                    fetchCosts();
+                }
+            } catch (e) {
+                alert("Delete failed.");
+            }
+        }
+    }
+
+    function resetForm() {
+        document.getElementById("costId").value = "";
+        document.getElementById("costForm").reset();
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.innerText = "Save Cost";
+        saveBtn.className = "btn btn-success btn-sm btn-action";
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+    document.addEventListener("DOMContentLoaded", fetchCosts);
+</script>
+
+</body>
+</html>
