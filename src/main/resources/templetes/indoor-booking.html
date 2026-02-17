@@ -10,57 +10,21 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
     <style>
-        body {
-            background-color: #f4f7f6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-bottom: 50px;
-        }
-
-        .main-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
-
-        .card-header-custom {
-            font-weight: 600;
-            background-color: #fff;
-            border-bottom: 1px solid #eee;
-            padding: 1.25rem;
-            border-radius: 15px 15px 0 0;
-        }
-
-        table.table tbody tr:hover {
-            background-color: rgba(0,0,0,0.03);
-            cursor: pointer;
-        }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 50px; }
+        .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .card-header-custom { font-weight: 600; background-color: #fff; border-bottom: 1px solid #eee; padding: 1.25rem; border-radius: 15px 15px 0 0; }
+        table.table tbody tr:hover { background-color: rgba(0,0,0,0.03); cursor: pointer; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
         .bg-booked { background-color: #d1e7dd; color: #0f5132; }
         .bg-completed { background-color: #cff4fc; color: #055160; }
         .bg-cancelled { background-color: #f8d7da; color: #842029; }
-
         .btn-action { width: 100px; }
-
-        @media (max-width: 768px) {
-            .btn-action { width: 100%; margin-bottom: 5px; }
-        }
-
+        @media (max-width: 768px) { .btn-action { width: 100%; margin-bottom: 5px; } }
         .nav-buttons .btn { margin-bottom: 15px; }
     </style>
 </head>
 <body>
-
 <div class="container mt-5">
-
     <div class="nav-buttons">
         <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
             <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
@@ -77,7 +41,6 @@
         <div class="card-body">
             <form id="bookingForm">
                 <input type="hidden" id="bookingId">
-
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Location Name</label>
@@ -127,10 +90,9 @@
                         </select>
                     </div>
                 </div>
-
                 <div class="mt-4">
-                    <button type="button" class="btn btn-success btn-sm btn-action" id="saveBtn" onclick="saveBooking()">Save</button>
-                    <button type="button" class="btn btn-primary btn-sm btn-action d-none" id="updateBtn" onclick="updateBooking()">Update</button>
+                    <button type="button" class="btn btn-success btn-sm btn-action" id="saveBtn">Save</button>
+                    <button type="button" class="btn btn-primary btn-sm btn-action d-none" id="updateBtn">Update</button>
                     <button type="button" class="btn btn-secondary btn-sm btn-action" onclick="clearForm()">Reset</button>
                 </div>
             </form>
@@ -163,96 +125,76 @@
             <div id="noData" class="text-center text-muted py-4 d-none">No records found.</div>
         </div>
     </div>
-
 </div>
 
 <script>
     const BASE_URL = "http://localhost:8080/api/v1/indoor-booking";
 
-    let editingId = null;
-
     async function renderBookings() {
         const tbody = document.getElementById('bookingTable');
         tbody.innerHTML = '';
+        try {
+            const res = await fetch(BASE_URL);
+            const bookings = await res.json();
 
-        const res = await fetch(BASE_URL);
-        const bookings = await res.json();
-
-        if(bookings.length === 0) {
-            document.getElementById('noData').classList.remove('d-none');
-            return;
-        } else {
+            if (!bookings || bookings.length === 0) {
+                document.getElementById('noData').classList.remove('d-none');
+                return;
+            }
             document.getElementById('noData').classList.add('d-none');
-        }
 
-        bookings.forEach(b => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>#${b.id}</td>
-                <td>${b.locationName}</td>
-                <td>${b.customerName}</td>
-                <td>${b.contactNumber}</td>
-                <td>${b.bookingDate}</td>
-                <td>${b.startTime} - ${b.endTime}</td>
-                <td>Rs. ${b.price}</td>
-                <td>${b.shootType}</td>
-                <td>
-                    <span class="status-badge ${b.status === 'BOOKED' ? 'bg-booked' : b.status === 'COMPLETED' ? 'bg-completed' : 'bg-cancelled'}">
-                        ${b.status}
-                    </span>
-                </td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editBooking(${b.id})">Edit</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking(${b.id})">Delete</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+            bookings.forEach(b => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${b.id}</td>
+                    <td>${b.locationName}</td>
+                    <td>${b.customerName}</td>
+                    <td>${b.contactNumber}</td>
+                    <td>${b.bookingDate}</td>
+                    <td>${b.startTime} - ${b.endTime}</td>
+                    <td>Rs. ${b.price}</td>
+                    <td>${b.shootType}</td>
+                    <td>
+                        <span class="status-badge ${b.status==='BOOKED'?'bg-booked':b.status==='COMPLETED'?'bg-completed':'bg-cancelled'}">${b.status}</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editBooking(${b.id})">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking(${b.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     async function saveBooking() {
         const dto = getFormData();
         try {
-            await fetch(BASE_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(dto)
-            });
-            renderBookings();
-            clearForm();
-        } catch (e) {
-            alert("Error saving booking: " + e.message);
-        }
+            await fetch(BASE_URL, { method: 'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dto)});
+            renderBookings(); clearForm();
+        } catch(e){ alert("Error: "+e.message); }
     }
 
     async function updateBooking() {
-        const dto = getFormData();
         const id = document.getElementById('bookingId').value;
-
+        const dto = getFormData();
         try {
-            await fetch(`${BASE_URL}/${id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(dto)
-            });
-            renderBookings();
-            clearForm();
-        } catch (e) {
-            alert("Error updating booking: " + e.message);
-        }
+            await fetch(`${BASE_URL}/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dto)});
+            renderBookings(); clearForm();
+        } catch(e){ alert("Error: "+e.message); }
     }
 
     async function deleteBooking(id) {
-        if(!confirm("Are you sure to delete this booking?")) return;
-        await fetch(`${BASE_URL}/${id}`, {method: 'DELETE'});
+        if (!confirm("Are you sure?")) return;
+        await fetch(`${BASE_URL}/${id}`, { method:'DELETE'});
         renderBookings();
     }
 
     async function editBooking(id) {
         const res = await fetch(`${BASE_URL}/${id}`);
         const b = await res.json();
-
-        editingId = id;
         document.getElementById('bookingId').value = b.id;
         document.getElementById('locationName').value = b.locationName;
         document.getElementById('customerName').value = b.customerName;
@@ -284,11 +226,12 @@
 
     function clearForm() {
         document.getElementById('bookingForm').reset();
-        editingId = null;
         document.getElementById('saveBtn').classList.remove('d-none');
         document.getElementById('updateBtn').classList.add('d-none');
     }
 
+    document.getElementById('saveBtn').addEventListener('click', saveBooking);
+    document.getElementById('updateBtn').addEventListener('click', updateBooking);
     document.addEventListener('DOMContentLoaded', renderBookings);
 </script>
 

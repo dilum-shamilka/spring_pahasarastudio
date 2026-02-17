@@ -18,11 +18,13 @@ public class Booking {
 
     private LocalDate bookingDate;
     private String location;
+    private String status;
 
-    @Column(nullable = false)
-    private String status = "PENDING";
-
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "client_email", referencedColumnName = "email", nullable = false)
     private Client client;
+
+    @ManyToOne
+    @JoinColumn(name = "service_id", referencedColumnName = "id", nullable = true)
+    private StudioServiceEntity service;
 }

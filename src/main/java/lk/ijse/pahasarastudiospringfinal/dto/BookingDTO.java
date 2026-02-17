@@ -10,8 +10,14 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class BookingDTO {
     private Long id;
-    private LocalDate bookingDate; // ✅ Ensure this matches the Service call
+    private LocalDate bookingDate;
     private String location;
     private String status;
-    private String clientEmail; // To link the client
+
+    // Client Info
+    private String clientEmail;
+
+    // Service Info
+    private Long serviceId;
+    private String serviceName;
 }

@@ -16,7 +16,7 @@
     }
     body { background: var(--bg-light); font-family: 'Inter', sans-serif; color: #334155; }
 
-    /* Sidebar */
+    /* Sidebar Styles */
     .sidebar {
       height: 100vh; background: var(--sidebar-bg); color: #f8fafc;
       padding: 25px 15px; position: fixed; width: 260px;
@@ -35,13 +35,21 @@
     .logout-btn { margin-top: auto; color: #fb7185; padding: 15px; text-decoration: none; font-weight: 600; }
     .logout-btn:hover { color: #f43f5e; }
 
-    /* Main content */
-    .main-content { margin-left: 260px; padding: 40px; }
+    /* Main Content Area */
+    .main-content { margin-left: 260px; padding: 40px; position: relative; }
 
+    .top-logout {
+      position: absolute; top: 20px; right: 40px;
+      color: #fb7185; cursor: pointer; font-weight: 600;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .top-logout:hover { color: #f43f5e; }
+
+    /* Stat Cards */
     .stat-card {
       background: white; border: none; border-radius: 16px;
       padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: transform 0.2s; height: 100%;
+      transition: transform 0.2s; height: 100%; position: relative;
     }
     .stat-card:hover { transform: translateY(-3px); }
     .icon-box {
@@ -49,15 +57,13 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 20px; margin-bottom: 15px;
     }
+    /* Color Variants */
     .bg-blue-light { background: #eff6ff; color: #3b82f6; }
     .bg-green-light { background: #f0fdf4; color: #22c55e; }
     .bg-purple-light { background: #faf5ff; color: #a855f7; }
-    .bg-orange-light { background: #fff7ed; color: #f97316; }
-    .bg-pink-light { background: #fff0f6; color: #ec4899; }
-    .bg-teal-light { background: #f0fdfa; color: #14b8a6; }
     .bg-purple-dark { background: #ede9fe; color: #7c3aed; }
 
-    /* Quick Actions */
+    /* Action Buttons */
     .btn-action {
       background: white; border: 1px solid #e2e8f0;
       border-radius: 10px; padding: 12px 20px; font-weight: 500;
@@ -66,11 +72,7 @@
     }
     .btn-action:hover { background: #f1f5f9; border-color: var(--accent-color); }
 
-    /* Booking Warning */
-    #bookingWarning {
-      display: none;
-      margin-bottom: 20px;
-    }
+    #bookingWarning { display: none; margin-bottom: 20px; }
 
     /* Floating Widgets */
     .floating-container {
@@ -91,7 +93,7 @@
       display: flex; justify-content: space-between; align-items: center;
     }
 
-    /* Calculator Style */
+    /* Calculator Styles */
     #calc-display {
       width: 100%; border: none; padding: 15px; text-align: right;
       font-size: 1.5rem; background: #f1f5f9; outline: none;
@@ -104,7 +106,7 @@
     .btn-operator { color: var(--accent-color); }
     .btn-equal { background: var(--accent-color) !important; color: white; }
 
-    /* Notepad Style */
+    /* Notepad Styles */
     #notepad-area {
       width: 100%; height: 250px; border: none; padding: 15px;
       resize: none; outline: none; font-size: 0.9rem;
@@ -131,6 +133,8 @@
 </aside>
 
 <main class="main-content">
+  <div class="top-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+
   <div class="d-flex justify-content-between align-items-end mb-2">
     <div>
       <h4 class="text-muted mb-1">Overview</h4>
@@ -142,18 +146,44 @@
     </div>
   </div>
 
-  <!-- Stats -->
   <div class="row g-4 mb-5">
-    <div class="col-md"><div class="stat-card"><div class="icon-box bg-blue-light"><i class="fas fa-users"></i></div><div class="text-muted small fw-medium">Total Clients</div><h3 class="fw-bold mb-0" id="userCount">0</h3></div></div>
-    <div class="col-md"><div class="stat-card"><div class="icon-box bg-green-light"><i class="fas fa-calendar-check"></i></div><div class="text-muted small fw-medium">Active Bookings</div><h3 class="fw-bold mb-0" id="bookingCount">0</h3></div></div>
-    <div class="col-md"><div class="stat-card"><div class="icon-box bg-purple-light"><i class="fas fa-file-invoice"></i></div><div class="text-muted small fw-medium">Unpaid Invoices</div><h3 class="fw-bold mb-0" id="invoiceCount">0</h3></div></div>
-    <div class="col-md"><div class="stat-card"><div class="icon-box bg-orange-light"><i class="fas fa-camera"></i></div><div class="text-muted small fw-medium">Photographers</div><h3 class="fw-bold mb-0" id="photographerCount">0</h3></div></div>
-    <div class="col-md"><div class="stat-card"><div class="icon-box bg-pink-light"><i class="fas fa-border-all"></i></div><div class="text-muted small fw-medium">Photo Frames</div><h3 class="fw-bold mb-0" id="frameCount">0</h3></div></div>
-    <div class="col-md"><div class="stat-card"><div class="icon-box bg-teal-light"><i class="fas fa-gift"></i></div><div class="text-muted small fw-medium">Packages</div><h3 class="fw-bold mb-0" id="packageCount">0</h3></div></div>
-    <div class="col-md"><div class="stat-card"><div class="icon-box bg-purple-dark"><i class="fas fa-map-marker-alt"></i></div><div class="text-muted small fw-medium">Indoor Bookings</div><h3 class="fw-bold mb-0" id="indoorBookingCount">0</h3></div></div>
+    <div class="col-md">
+      <div class="stat-card">
+        <div class="icon-box bg-blue-light"><i class="fas fa-users"></i></div>
+        <div class="text-muted small fw-medium">Total Clients</div>
+        <h3 class="fw-bold mb-0" id="clientCount"><span class="spinner-border spinner-border-sm"></span></h3>
+      </div>
+    </div>
+
+    <div class="col-md">
+      <div class="stat-card">
+        <div class="icon-box bg-green-light"><i class="fas fa-calendar-check"></i></div>
+        <div class="text-muted small fw-medium">Active Bookings</div>
+        <h3 class="fw-bold mb-0" id="bookingCount"><span class="spinner-border spinner-border-sm"></span></h3>
+      </div>
+    </div>
+
+    <div class="col-md">
+      <div class="stat-card">
+        <div class="icon-box bg-purple-light">
+          <i class="fas fa-hand-holding-dollar"></i>
+        </div>
+        <div class="text-muted small fw-medium">Cost Entries</div>
+        <h3 class="fw-bold mb-0" id="costCount"><span class="spinner-border spinner-border-sm"></span></h3>
+      </div>
+    </div>
+
+    <div class="col-md">
+      <div class="stat-card">
+        <div class="icon-box bg-purple-dark">
+          <i class="fas fa-user-tag"></i>
+        </div>
+        <div class="text-muted small fw-medium">User Count</div>
+        <h3 class="fw-bold mb-0" id="userCount"><span class="spinner-border spinner-border-sm"></span></h3>
+      </div>
+    </div>
   </div>
 
-  <!-- Quick Actions -->
   <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
     <h5 class="fw-bold mb-4">Quick Actions</h5>
     <div class="row row-cols-1 row-cols-md-3 g-3">
@@ -167,7 +197,6 @@
   </div>
 </main>
 
-<!-- Floating Widgets -->
 <div class="floating-container">
   <button class="widget-btn bg-primary" onclick="toggleWidget('calculator')"><i class="fas fa-calculator"></i></button>
   <button class="widget-btn bg-warning" onclick="toggleWidget('notepad')"><i class="fas fa-sticky-note"></i></button>
@@ -178,13 +207,13 @@
   <input type="text" id="calc-display" disabled value="0">
   <div class="calc-grid">
     <button onclick="clearCalc()" class="btn-operator">C</button>
-    <button onclick="appendCalc('/')" class="btn-operator">÷</button>
-    <button onclick="appendCalc('*')" class="btn-operator">×</button>
-    <button onclick="backspaceCalc()" class="btn-operator"><i class="fas fa-backspace"></i></button>
+    <button onclick="appendCalc('/')">÷</button>
+    <button onclick="appendCalc('*')">×</button>
+    <button onclick="backspaceCalc()"><i class="fas fa-backspace"></i></button>
     <button onclick="appendCalc('7')">7</button><button onclick="appendCalc('8')">8</button><button onclick="appendCalc('9')">9</button>
-    <button onclick="appendCalc('-')" class="btn-operator">−</button>
+    <button onclick="appendCalc('-')">−</button>
     <button onclick="appendCalc('4')">4</button><button onclick="appendCalc('5')">5</button><button onclick="appendCalc('6')">6</button>
-    <button onclick="appendCalc('+')" class="btn-operator">+</button>
+    <button onclick="appendCalc('+')">+</button>
     <button onclick="appendCalc('1')">1</button><button onclick="appendCalc('2')">2</button><button onclick="appendCalc('3')">3</button>
     <button onclick="calculateResult()" class="btn-equal" style="grid-row: span 2">=</button>
     <button onclick="appendCalc('0')" style="grid-column: span 2">0</button><button onclick="appendCalc('.')">.</button>
@@ -205,7 +234,6 @@
     document.getElementById("welcomeText").innerText = `Hello, ${email ? email.split('@')[0] : 'User'}!`;
     document.getElementById("currentDate").innerText = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-    // Load Note
     document.getElementById("notepad-area").value = localStorage.getItem("pahasara_notes") || "";
     document.getElementById("notepad-area").addEventListener("input", e => localStorage.setItem("pahasara_notes", e.target.value));
 
@@ -219,7 +247,7 @@
     el.style.display = isVisible ? 'none' : 'flex';
   }
 
-  // Calculator
+  // Calculator Logic
   let calcInput = "";
   function appendCalc(val) { calcInput += val; document.getElementById("calc-display").value = calcInput; }
   function clearCalc() { calcInput = ""; document.getElementById("calc-display").value = "0"; }
@@ -227,34 +255,64 @@
   function calculateResult() { try { calcInput = eval(calcInput).toString(); document.getElementById("calc-display").value = calcInput; } catch { document.getElementById("calc-display").value="Error"; calcInput=""; } }
 
   async function loadStats() {
+    const token = localStorage.getItem("jwtToken") || localStorage.getItem("token") || localStorage.getItem("authToken");
+    const headers = { 'Content-Type': 'application/json' };
+    if(token) headers['Authorization'] = `Bearer ${token}`;
+
     const endpoints = {
-      userCount:'http://localhost:8080/api/v1/clients/getAll',
-      bookingCount:'http://localhost:8080/api/v1/bookings/getAll',
-      indoorBookingCount:'http://localhost:8080/api/v1/indoor-booking/getAll',
-      invoiceCount:'http://localhost:8080/api/v1/invoices/getAll',
-      photographerCount:'http://localhost:8080/api/v1/photographers/getAll',
-      frameCount:'http://localhost:8080/api/v1/photoframe',
-      packageCount:'http://localhost:8080/api/v1/services/getAll'
+      clientCount: 'http://localhost:8080/api/v1/clients/getAll',
+      bookingCount: 'http://localhost:8080/api/v1/bookings/getAll',
+      userCount: 'http://localhost:8080/api/v1/clients/getAll', // Now targets User Count
+      costCount: 'http://localhost:8080/api/v1/costs/all'
     };
 
-    for(const [id,url] of Object.entries(endpoints)) {
+    for(const [id, url] of Object.entries(endpoints)) {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { method:'GET', headers: headers });
+        if(!res.ok) {
+          const el = document.getElementById(id);
+          if(el) el.innerHTML = `<span class="text-danger" style="font-size:0.6em">Err ${res.status}</span>`;
+          continue;
+        }
         const data = await res.json();
-        const count = Array.isArray(data) ? data.length : (data.content ? data.content.length : 0);
-        document.getElementById(id).innerText = count;
-        if(id==='bookingCount') checkUpcomingBookings(data.content||data);
-      } catch(err){ console.error(`Error loading ${id}:`,err); document.getElementById(id).innerText="0"; }
+        let listData = [];
+        if(Array.isArray(data)) listData = data;
+        else if(data && Array.isArray(data.content)) listData = data.content;
+        else if(data && Array.isArray(data.data)) listData = data.data;
+        else if(data && Array.isArray(data.result)) listData = data.result;
+        else if(typeof data === 'object') {
+          const foundKey = Object.keys(data).find(key => Array.isArray(data[key]));
+          if(foundKey) listData = data[foundKey];
+        }
+        const count = listData.length;
+        const element = document.getElementById(id);
+        if(element) element.innerText = count;
+        if(id === 'bookingCount') checkUpcomingBookings(listData);
+      } catch(err) {
+        const element = document.getElementById(id);
+        if(element) element.innerText = "0";
+      }
     }
   }
 
-  function checkUpcomingBookings(bookings){
-    const today = new Date(); const warningDays = 3;
-    const upcoming = bookings.filter(b => { const bd = new Date(b.bookingDate); return (bd-today)/(1000*60*60*24)>=0 && (bd-today)/(1000*60*60*24)<=warningDays; });
+  function checkUpcomingBookings(bookings) {
+    if(!Array.isArray(bookings) || bookings.length===0) return;
+    const today = new Date();
+    const warningDays = 3;
+    const upcoming = bookings.filter(b => {
+      if(!b.bookingDate) return false;
+      const bd = new Date(b.bookingDate);
+      const diffDays = (bd - today)/(1000*60*60*24);
+      return diffDays >=0 && diffDays <= warningDays;
+    });
     const warningDiv = document.getElementById("bookingWarning");
-    if(upcoming.length>0){ warningDiv.style.display='block'; warningDiv.innerHTML=`You have ${upcoming.length} upcoming booking(s) in next ${warningDays} day(s).`; }
+    if(upcoming.length>0){
+      warningDiv.style.display = 'block';
+      warningDiv.innerHTML = `<i class="fas fa-bell me-2"></i> You have ${upcoming.length} upcoming booking(s) in the next ${warningDays} days.`;
+    } else warningDiv.style.display = 'none';
   }
-  function logout(){ localStorage.clear(); window.location.href="auth.html"; }
+
+  function logout() { localStorage.clear(); window.location.href = "logout.html"; }
 </script>
 
 </body>

@@ -9,7 +9,6 @@ import java.util.List;
 
 @Repository
 public interface BookingRepo extends JpaRepository<Booking, Long> {
-
     boolean existsByBookingDateAndLocation(LocalDate bookingDate, String location);
 
     List<Booking> findByBookingDate(LocalDate bookingDate);

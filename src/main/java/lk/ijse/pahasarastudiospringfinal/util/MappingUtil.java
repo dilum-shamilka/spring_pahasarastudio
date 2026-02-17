@@ -57,6 +57,7 @@ public class MappingUtil {
         entity.setMessage(dto.getMessage());
         return entity;
     }
+
     // ==================== CLIENT MAPPINGS ====================
     public ClientDTO toClientDTO(Client entity) {
         if (entity == null) return null;
@@ -83,15 +84,20 @@ public class MappingUtil {
     }
 
     // ==================== BOOKING MAPPINGS ====================
-    public BookingDTO toBookingDTO(Booking entity) {
-        if (entity == null) return null;
+    public BookingDTO toBookingDTO(Booking booking) {
+        if (booking == null) return null;
 
         BookingDTO dto = new BookingDTO();
-        dto.setId(entity.getId());
-        dto.setBookingDate(entity.getBookingDate());
-        dto.setLocation(entity.getLocation());
-        dto.setStatus(entity.getStatus());
-        dto.setClientEmail(entity.getClient() != null ? entity.getClient().getEmail() : null);
+        dto.setId(booking.getId());
+        dto.setBookingDate(booking.getBookingDate());
+        dto.setLocation(booking.getLocation());
+        dto.setStatus(booking.getStatus());
+        dto.setClientEmail(booking.getClient().getEmail());
+
+        if (booking.getService() != null) {
+            dto.setServiceId(booking.getService().getId());
+            dto.setServiceName(booking.getService().getServiceName());
+        }
         return dto;
     }
 
@@ -106,6 +112,7 @@ public class MappingUtil {
         entity.setClient(client);
         return entity;
     }
+
 
     // ==================== INVENTORY MAPPINGS ====================
     public InventoryDTO toInventoryDTO(Inventory entity) {
@@ -337,6 +344,7 @@ public class MappingUtil {
 
         return entity;
     }
+
     // ==================== PHOTO FRAME MAPPINGS ====================
     public PhotoFrameDTO toPhotoFrameDTO(PhotoFrame entity) {
         if (entity == null) return null;
@@ -371,5 +379,5 @@ public class MappingUtil {
                 .map(mapper)
                 .collect(Collectors.toList());
     }
-
 }
+
