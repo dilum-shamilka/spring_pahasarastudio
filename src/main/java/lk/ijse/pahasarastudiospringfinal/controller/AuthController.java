@@ -2,11 +2,12 @@ package lk.ijse.pahasarastudiospringfinal.controller;
 
 import lk.ijse.pahasarastudiospringfinal.dto.AuthDTO;
 import lk.ijse.pahasarastudiospringfinal.dto.ResponseDTO;
-import lk.ijse.pahasarastudiospringfinal.dto.UserDTO;
-import lk.ijse.pahasarastudiospringfinal.service.UserService;
-import lk.ijse.pahasarastudiospringfinal.util.VarList;
+import lk.ijse.pahasarastudiospringfinal.entity.User;
+import lk.ijse.pahasarastudiospringfinal.repo.UserRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,45 +15,28 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 public class AuthController {
 
-    private final UserService userService;
+    @Autowired
+    private UserRepo userRepo;
 
-    public AuthController(UserService userService) {
-        this.userService = userService;
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    // --- USER REGISTRATION ---
-    @PostMapping("/register")
-    public ResponseEntity<ResponseDTO> registerUser(@RequestBody UserDTO userDTO) {
-        try {
-            String res = userService.saveUser(userDTO);
-            if (res.equals(VarList.RSP_SUCCESS)) {
-                return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(new ResponseDTO(VarList.RSP_SUCCESS, "Registration Successful", userDTO));
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseDTO(VarList.RSP_DUPLICATED, "User Already Exists", null));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
-        }
-    }
-
-    // --- USER LOGIN ---
     @PostMapping("/login")
     public ResponseEntity<ResponseDTO> login(@RequestBody AuthDTO authDTO) {
-        try {
-            boolean isAuthenticated = userService.authenticate(authDTO);
+        return userRepo.findAll().stream()
+                .filter(u -> u.getEmail().equals(authDTO.getEmail()))
+                .findFirst()
+                .map(user -> {
+                    if (passwordEncoder.matches(authDTO.getPassword(), user.getPassword())) {
+                        return ResponseEntity.ok(new ResponseDTO("00", "Success", user.getRole().name()));
+                    }
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseDTO("01", "Wrong Password", null));
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseDTO("01", "User Not Found", null)));
+    }
 
-            if (isAuthenticated) {
-                return ResponseEntity.ok(new ResponseDTO(VarList.RSP_SUCCESS, "Login Successful", authDTO.getUsername()));
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ResponseDTO(VarList.RSP_ERROR, "Invalid Username or Password", null));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO(VarList.RSP_ERROR, e.getMessage(), null));
-        }
+    @PostMapping("/logout")
+    public ResponseEntity<ResponseDTO> logout() {
+        return ResponseEntity.ok(new ResponseDTO("00", "Session Cleared", null));
     }
 }
