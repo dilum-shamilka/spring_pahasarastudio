@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pahasara Studio | Welcome</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    :root { --primary-dark: #0f172a; --accent-blue: #2563eb; }
+    body { font-family: 'Inter', sans-serif; background: #ffffff; margin: 0; }
+
+    .hero-section {
+      height: 100vh;
+      background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)),
+      url('https://images.unsplash.com/photo-1520333789090-1afc82db536a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+    }
+
+    .hero-content h1 { font-size: 4rem; fw-bold; letter-spacing: -1px; }
+    .hero-content p { font-size: 1.25rem; color: #cbd5e1; margin-bottom: 30px; }
+
+    .btn-get-started {
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      background-color: var(--accent-blue);
+      border: none;
+      transition: 0.3s;
+      text-decoration: none;
+      color: white;
+    }
+
+    .btn-get-started:hover {
+      background-color: #1d4ed8;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .navbar { background: transparent; position: absolute; width: 100%; top: 0; padding: 20px 0; }
+    .navbar-brand { font-weight: 800; color: white !important; font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container">
+    <a class="navbar-brand" href="#">PAHASARA <span class="text-primary">STUDIO</span></a>
+    <div class="d-flex">
+      <a href="loginRegister.html" class="btn btn-outline-light px-4 rounded-pill">Login</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="container hero-content">
+    <h1 class="display-2 fw-bold mb-3">Capturing Moments,<br>Creating Memories</h1>
+    <p>The ultimate management solution for modern photography studios.</p>
+    <div class="mt-4">
+      <a href=loginRegister.html class="btn btn-get-started">
+        Get Started <i class="bi bi-arrow-right ms-2"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
