@@ -15,11 +15,11 @@ $(document).ready(function () {
     });
 });
 
-// Load services first
 async function loadServices() {
     try {
         const response = await $.get(`${SERVICE_API}/getAll`);
-        serviceList = response || [];
+        // FIXED: Access .content from the wrapper
+        serviceList = response.content || [];
         let options = '<option value="" selected disabled>Select a Package</option>';
         serviceList.forEach(s => {
             if (s.status === 'ACTIVE') {
@@ -32,16 +32,16 @@ async function loadServices() {
     }
 }
 
-// Load bookings into table
 function loadBookings() {
     $.ajax({
         url: `${BOOKING_API}/getAll`,
         method: "GET",
         success: function (response) {
-            bookingList = response || [];
+            // FIXED: Your backend sends data inside the 'content' key
+            bookingList = response.content || [];
             let rows = "";
 
-            if (!bookingList.length) {
+            if (!bookingList || bookingList.length === 0) {
                 $("#noData").removeClass("d-none");
                 $("#bookingTableBody").html("");
                 return;
@@ -55,8 +55,9 @@ function loadBookings() {
                 else if (b.status === "CANCELLED") statusClass += " status-cancelled";
                 else statusClass += " status-pending";
 
+                // Mapping service name from the list
                 const serviceOption = serviceList.find(s => s.id == b.serviceId);
-                const serviceText = serviceOption ? serviceOption.serviceName : '<span class="text-danger small">Not Selected</span>';
+                const serviceText = serviceOption ? serviceOption.serviceName : (b.serviceName || '<span class="text-danger small">Unknown</span>');
 
                 rows += `
                 <tr>
@@ -81,7 +82,6 @@ function loadBookings() {
     });
 }
 
-// Save or update
 function saveBooking() {
     const id = $("#bookingId").val();
     const dto = {
@@ -102,8 +102,9 @@ function saveBooking() {
         contentType: "application/json",
         data: JSON.stringify(dto),
         success: function (res) {
-            if (res.status === "success") {
-                alert(res.message);
+            // FIXED: Backend uses 'code' == '00' for success (VarList.RSP_SUCCESS)
+            if (res.code === "00") {
+                alert(res.message || "Operation Successful");
                 resetForm();
                 loadBookings();
             } else {
@@ -112,12 +113,28 @@ function saveBooking() {
         },
         error: function (err) {
             console.error("Failed to save booking:", err);
-            alert("Failed to save booking. Check console.");
+            alert("Failed to save. Check if the Client Email exists in the system.");
         }
     });
 }
 
-// Edit
+function deleteBooking(id) {
+    if (!confirm("Are you sure to delete?")) return;
+
+    $.ajax({
+        url: `${BOOKING_API}/delete/${id}`,
+        method: "DELETE",
+        success: function (res) {
+            if (res.code === "00") {
+                alert("Deleted successfully");
+                loadBookings();
+            } else {
+                alert("Failed to delete: " + res.message);
+            }
+        }
+    });
+}
+
 function editBooking(id) {
     const b = bookingList.find(x => x.id === id);
     if (!b) return;
@@ -133,27 +150,6 @@ function editBooking(id) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Delete
-function deleteBooking(id) {
-    if (!confirm("Are you sure to delete?")) return;
-
-    $.ajax({
-        url: `${BOOKING_API}/delete/${id}`,
-        method: "DELETE",
-        success: function (res) {
-            if (res.status === "success") {
-                alert(res.message);
-                loadBookings();
-            } else alert("Failed to delete booking.");
-        },
-        error: function (err) {
-            console.error("Failed to delete booking:", err);
-            alert("Failed to delete booking.");
-        }
-    });
-}
-
-// Reset form
 function resetForm() {
     $("#bookingForm")[0].reset();
     $("#bookingId").val("");

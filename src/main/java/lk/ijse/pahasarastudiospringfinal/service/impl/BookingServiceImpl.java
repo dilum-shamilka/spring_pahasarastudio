@@ -24,60 +24,87 @@ public class BookingServiceImpl implements BookingService {
 
     @Autowired
     private BookingRepo bookingRepo;
+
     @Autowired
     private ClientRepo clientRepo;
+
     @Autowired
     private StudioServiceRepo serviceRepo;
+
     @Autowired
     private MappingUtil mapper;
 
     @Override
     public String saveBooking(BookingDTO dto) {
+        // Validate Client existence
         Optional<Client> clientOpt = clientRepo.findByEmail(dto.getClientEmail());
         if (clientOpt.isEmpty()) return VarList.RSP_NO_DATA_FOUND;
 
+        // Validate Service existence
         Optional<StudioServiceEntity> serviceOpt = serviceRepo.findById(dto.getServiceId());
         if (serviceOpt.isEmpty()) return VarList.RSP_NO_DATA_FOUND;
 
-        if (bookingRepo.existsByBookingDateAndLocation(dto.getBookingDate(), dto.getLocation()))
+        // Check for double bookings at the same time and place
+        if (bookingRepo.existsByBookingDateAndLocation(dto.getBookingDate(), dto.getLocation())) {
             return VarList.RSP_DUPLICATED;
+        }
 
         Booking booking = mapper.toBookingEntity(dto, clientOpt.get());
         booking.setService(serviceOpt.get());
+
+        // Ensure ID is null for a new save to prevent accidental updates
+        booking.setId(null);
+
         bookingRepo.save(booking);
         return VarList.RSP_SUCCESS;
     }
 
     @Override
     public String updateBooking(BookingDTO dto) {
-        if (dto.getId() == null || !bookingRepo.existsById(dto.getId()))
+        // Check if the booking actually exists before updating
+        if (dto.getId() == null || !bookingRepo.existsById(dto.getId())) {
             return VarList.RSP_NO_DATA_FOUND;
+        }
 
         Optional<Client> clientOpt = clientRepo.findByEmail(dto.getClientEmail());
         Optional<StudioServiceEntity> serviceOpt = serviceRepo.findById(dto.getServiceId());
-        if (clientOpt.isEmpty() || serviceOpt.isEmpty()) return VarList.RSP_NO_DATA_FOUND;
 
+        if (clientOpt.isEmpty() || serviceOpt.isEmpty()) {
+            return VarList.RSP_NO_DATA_FOUND;
+        }
+
+        // Map DTO to Entity
         Booking booking = mapper.toBookingEntity(dto, clientOpt.get());
         booking.setService(serviceOpt.get());
+
+        // CRITICAL: Explicitly set the ID so Hibernate knows to UPDATE instead of INSERT
+        booking.setId(dto.getId());
+
         bookingRepo.save(booking);
         return VarList.RSP_SUCCESS;
     }
 
     @Override
     public String deleteBooking(Long id) {
-        if (!bookingRepo.existsById(id)) return VarList.RSP_NO_DATA_FOUND;
+        if (!bookingRepo.existsById(id)) {
+            return VarList.RSP_NO_DATA_FOUND;
+        }
         bookingRepo.deleteById(id);
         return VarList.RSP_SUCCESS;
     }
 
     @Override
     public BookingDTO getBookingById(Long id) {
-        return bookingRepo.findById(id).map(mapper::toBookingDTO).orElse(null);
+        return bookingRepo.findById(id)
+                .map(mapper::toBookingDTO)
+                .orElse(null);
     }
 
     @Override
     public List<BookingDTO> getAllBookings() {
-        return mapper.mapList(bookingRepo.findAll(), mapper::toBookingDTO);
+        // Fetches all bookings and converts them to a List of DTOs for the UI table
+        List<Booking> allBookings = bookingRepo.findAll();
+        return mapper.mapList(allBookings, mapper::toBookingDTO);
     }
 
     @Override
@@ -110,11 +137,10 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public String updateBookingStatus(Long id, String status) {
-        Optional<Booking> opt = bookingRepo.findById(id);
-        if (opt.isEmpty()) return VarList.RSP_NO_DATA_FOUND;
-        Booking booking = opt.get();
-        booking.setStatus(status);
-        bookingRepo.save(booking);
-        return VarList.RSP_SUCCESS;
+        return bookingRepo.findById(id).map(booking -> {
+            booking.setStatus(status);
+            bookingRepo.save(booking);
+            return VarList.RSP_SUCCESS;
+        }).orElse(VarList.RSP_NO_DATA_FOUND);
     }
 }
