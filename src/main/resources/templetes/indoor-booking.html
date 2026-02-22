@@ -2,57 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Pahasara Studio | Indoor Location Booking</title>
+    <title>Pahasara Studio | Room 23 Management</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Bootstrap & Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
     <style>
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 50px; }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
         .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
         .card-header-custom { font-weight: 600; background-color: #fff; border-bottom: 1px solid #eee; padding: 1.25rem; border-radius: 15px 15px 0 0; }
-        table.table tbody tr:hover { background-color: rgba(0,0,0,0.03); cursor: pointer; }
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
         .bg-booked { background-color: #d1e7dd; color: #0f5132; }
         .bg-completed { background-color: #cff4fc; color: #055160; }
         .bg-cancelled { background-color: #f8d7da; color: #842029; }
-        .btn-action { width: 100px; }
-        @media (max-width: 768px) { .btn-action { width: 100%; margin-bottom: 5px; } }
-        .nav-buttons .btn { margin-bottom: 15px; }
+        .studio-label { font-size: 1.5rem; color: #0d6efd; font-weight: bold; }
+        .btn-action { min-width: 140px; }
+        .action-group { display: flex; gap: 5px; justify-content: center; }
     </style>
 </head>
 <body>
 <div class="container mt-5">
-    <div class="nav-buttons">
-        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
-        </a>
+    <div id="alertPlaceholder"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">🏠 Indoor Booking Management</h2>
+            <span class="studio-label">Studio: Room 23</span>
+        </div>
+        <div>
+            <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
 
-    <h2 class="mb-4">🏠 Indoor Location Booking</h2>
-
-    <!-- Booking Form -->
     <div class="card main-card mb-4">
-        <div class="card-header-custom">
-            <h5 class="mb-0" id="formHeader">Booking Details</h5>
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>Booking Details</h5>
+            <button type="button" class="btn btn-dark btn-sm d-none" id="invoiceBtn" onclick="downloadInvoiceFromForm()">
+                <i class="fas fa-file-invoice me-1"></i> Generate PDF Invoice
+            </button>
         </div>
         <div class="card-body">
             <form id="bookingForm">
                 <input type="hidden" id="bookingId">
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold">Location Name</label>
-                        <input type="text" id="locationName" class="form-control" placeholder="e.g. Studio A" required>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Client Name</label>
+                        <input type="text" id="customerName" class="form-control" required>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold">Customer Name</label>
-                        <input type="text" id="customerName" class="form-control" placeholder="Full Name" required>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Client Gmail</label>
+                        <input type="email" id="clientEmail" class="form-control" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Contact Number</label>
-                        <input type="text" id="contactNumber" class="form-control" placeholder="Phone Number" required>
+                        <input type="text" id="contactNumber" class="form-control" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Booking Date</label>
@@ -66,55 +75,56 @@
                         <label class="form-label small fw-bold">End Time</label>
                         <input type="time" id="endTime" class="form-control" required>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold">Price (Rs.)</label>
-                        <input type="number" id="price" class="form-control" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold">Status</label>
-                        <select id="status" class="form-select">
-                            <option value="BOOKED">BOOKED</option>
-                            <option value="COMPLETED">COMPLETED</option>
-                            <option value="CANCELLED">CANCELLED</option>
-                        </select>
-                    </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-bold">Shoot Type</label>
                         <select id="shootType" class="form-select" required>
                             <option value="">Select Type</option>
-                            <option value="BIRTHDAY">Birthday</option>
-                            <option value="BABY">Baby</option>
+                            <option value="BIRTHDAY">Birthday Photography</option>
+                            <option value="BABY_SHOOT">Baby Shoot</option>
                             <option value="GENDER_REVEAL">Gender Reveal</option>
                             <option value="BRIDE_TO_BE">Bride to Be</option>
-                            <option value="PORTRAIT_SESSION">Portrait Session</option>
+                            <option value="PORTRAIT">Portrait Session</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Price (Rs.)</label>
+                        <input type="number" id="price" class="form-control" placeholder="0.00" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Status</label>
+                        <select id="status" class="form-select">
+                            <option value="BOOKED">Confirmed</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="CANCELLED">Cancelled</option>
                         </select>
                     </div>
                 </div>
                 <div class="mt-4">
-                    <button type="button" class="btn btn-success btn-sm btn-action" id="saveBtn">Save</button>
-                    <button type="button" class="btn btn-primary btn-sm btn-action d-none" id="updateBtn">Update</button>
+                    <button type="button" class="btn btn-success btn-sm btn-action" id="saveBtn">
+                        <i class="fas fa-paper-plane me-1"></i> Save & Send
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm btn-action d-none" id="updateBtn">
+                        <i class="fas fa-sync me-1"></i> Update & Send
+                    </button>
                     <button type="button" class="btn btn-secondary btn-sm btn-action" onclick="clearForm()">Reset</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Booking Table -->
     <div class="card main-card">
         <div class="card-body">
-            <h5 class="card-title mb-4">Indoor Bookings List</h5>
+            <h5 class="card-title mb-4">Room 23 Records</h5>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
                     <thead class="table-dark">
                     <tr>
                         <th>ID</th>
-                        <th>Location</th>
-                        <th>Customer</th>
-                        <th>Contact</th>
+                        <th>Client Details</th>
                         <th>Date</th>
                         <th>Time</th>
+                        <th>Type</th>
                         <th>Price</th>
-                        <th>Shoot Type</th>
                         <th>Status</th>
                         <th class="text-center">Actions</th>
                     </tr>
@@ -129,6 +139,46 @@
 
 <script>
     const BASE_URL = "http://localhost:8080/api/v1/indoor-booking";
+    const EMAIL_URL = "http://localhost:8080/api/v1/email/send";
+
+    // PDF INVOICE GENERATOR
+    function generateInvoice(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const shootTypeLabel = document.querySelector(`#shootType option[value="${data.shootType}"]`)?.text || data.shootType;
+
+        doc.setFontSize(22);
+        doc.setTextColor(13, 110, 253);
+        doc.text("PAHASARA STUDIO", 14, 20);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text("📍 Studio: Room 23 Indoor", 14, 26);
+        doc.text("Invoice Generated: " + new Date().toLocaleDateString(), 14, 31);
+
+        doc.setFontSize(18);
+        doc.setTextColor(0);
+        doc.text("INVOICE", 150, 20);
+
+        doc.setLineWidth(0.5);
+        doc.line(14, 40, 196, 40);
+        doc.setFontSize(12);
+        doc.text("BILL TO:", 14, 50);
+        doc.text(`Client Name : ${data.customerName}`, 14, 57);
+        doc.text(`Booking Date: ${data.bookingDate}`, 14, 63);
+
+        doc.autoTable({
+            startY: 80,
+            head: [['Description', 'Date', 'Time Slot', 'Price (Rs.)']],
+            body: [[shootTypeLabel, data.bookingDate, `${data.startTime} - ${data.endTime}`, parseFloat(data.price || 0).toLocaleString()]],
+            theme: 'grid',
+            headStyles: { fillColor: [13, 110, 253] }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.text(`TOTAL PAID: Rs. ${parseFloat(data.price || 0).toLocaleString()}`, 130, finalY);
+        doc.save(`Invoice_${data.customerName}_${data.bookingDate}.pdf`);
+    }
 
     async function renderBookings() {
         const tbody = document.getElementById('bookingTable');
@@ -136,105 +186,180 @@
         try {
             const res = await fetch(BASE_URL);
             const bookings = await res.json();
-
             if (!bookings || bookings.length === 0) {
                 document.getElementById('noData').classList.remove('d-none');
                 return;
             }
             document.getElementById('noData').classList.add('d-none');
-
             bookings.forEach(b => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>#${b.id}</td>
-                    <td>${b.locationName}</td>
-                    <td>${b.customerName}</td>
-                    <td>${b.contactNumber}</td>
+                    <td><strong>${b.customerName}</strong><br><small>${b.clientEmail}</small></td>
                     <td>${b.bookingDate}</td>
                     <td>${b.startTime} - ${b.endTime}</td>
-                    <td>Rs. ${b.price}</td>
                     <td>${b.shootType}</td>
-                    <td>
-                        <span class="status-badge ${b.status==='BOOKED'?'bg-booked':b.status==='COMPLETED'?'bg-completed':'bg-cancelled'}">${b.status}</span>
-                    </td>
+                    <td>Rs. ${parseFloat(b.price || 0).toLocaleString()}</td>
+                    <td><span class="status-badge ${getStatusClass(b.status)}">${b.status}</span></td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editBooking(${b.id})">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking(${b.id})">Delete</button>
-                    </td>
-                `;
+                        <div class="action-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editBooking(${b.id})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-dark" onclick='generateInvoiceFromRow(${JSON.stringify(b)})'><i class="fas fa-file-pdf"></i></button>
+                        </div>
+                    </td>`;
                 tbody.appendChild(tr);
             });
-        } catch (e) {
-            console.error(e);
+        } catch (e) { console.error("Error fetching bookings:", e); }
+    }
+
+    function generateInvoiceFromRow(booking) { generateInvoice(booking); }
+
+    function downloadInvoiceFromForm() {
+        const data = getFormData();
+        generateInvoice(data);
+    }
+
+    function getStatusClass(status) {
+        if (status === 'COMPLETED') return 'bg-completed';
+        if (status === 'BOOKED') return 'bg-booked';
+        if (status === 'CANCELLED') return 'bg-cancelled';
+        return 'bg-secondary';
+    }
+
+    // UPDATED ATTRACTIVE MESSAGING
+    async function triggerAutoEmail(data, bookingId = "New") {
+        let subject = "";
+        let msg = "";
+        let alertType = "success";
+
+        if (data.status === 'BOOKED') {
+            subject = "✨ Your Session is Confirmed! - Pahasara Studio";
+            msg = `Hello ${data.customerName},\n\n` +
+                `Great news! Your booking for Room 23 (ID: #${bookingId}) has been successfully confirmed. 📸\n\n` +
+                `📅 Date: ${data.bookingDate}\n` +
+                `🕒 Time Slot: ${data.startTime} to ${data.endTime}\n\n` +
+                `We are excited to help you capture these beautiful memories. See you soon at the studio!`;
         }
+        else if (data.status === 'CANCELLED') {
+            subject = "Booking Update: Cancellation - Pahasara Studio";
+            msg = `Hi ${data.customerName},\n\n` +
+                `We're writing to confirm that your booking for ${data.bookingDate} has been cancelled. 🛑\n\n` +
+                `If this was a mistake or you'd like to reschedule, feel free to contact us anytime. We hope to see you another time!`;
+            alertType = "danger";
+        }
+        else if (data.status === 'COMPLETED') {
+            subject = "❤️ Thank You for Choosing Pahasara Studio!";
+            msg = `Dear ${data.customerName},\n\n` +
+                `It was a pleasure having you in Room 23 today! 🌟 Your session is now marked as complete.\n\n` +
+                `Your digital invoice has been generated. We hope you enjoyed the experience as much as we enjoyed the shoot. We can't wait to show you the results!\n\n` +
+                `Best regards,\nPahasara Studio Team`;
+            alertType = "info";
+            generateInvoice(data);
+        }
+
+        try {
+            await fetch(EMAIL_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ toEmail: data.clientEmail, subject: subject, message: msg })
+            });
+            showAlert(alertType, `Update successful! A beautiful ${data.status} email has been sent to the client.`);
+        } catch (err) {
+            showAlert("warning", "Data saved successfully, but the email notification could not be sent.");
+        }
+    }
+
+    function showAlert(type, msg) {
+        const alertBox = document.getElementById('alertPlaceholder');
+        alertBox.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    }
+
+    function getFormData() {
+        return {
+            customerName: document.getElementById('customerName').value,
+            clientEmail: document.getElementById('clientEmail').value,
+            contactNumber: document.getElementById('contactNumber').value,
+            bookingDate: document.getElementById('bookingDate').value,
+            startTime: document.getElementById('startTime').value,
+            endTime: document.getElementById('endTime').value,
+            price: parseFloat(document.getElementById('price').value || 0),
+            status: document.getElementById('status').value,
+            shootType: document.getElementById('shootType').value,
+            locationName: "Room 23"
+        };
     }
 
     async function saveBooking() {
         const dto = getFormData();
+        if(!dto.customerName || !dto.clientEmail) return showAlert("danger", "Please provide a client name and email.");
+
         try {
-            await fetch(BASE_URL, { method: 'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dto)});
-            renderBookings(); clearForm();
-        } catch(e){ alert("Error: "+e.message); }
+            const res = await fetch(BASE_URL, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(dto)
+            });
+            if(res.ok) {
+                const savedData = await res.json();
+                await triggerAutoEmail(dto, savedData.id);
+                renderBookings();
+                clearForm();
+            }
+        } catch (e) { showAlert("danger", "Failed to connect to the server."); }
     }
 
     async function updateBooking() {
         const id = document.getElementById('bookingId').value;
         const dto = getFormData();
-        try {
-            await fetch(`${BASE_URL}/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(dto)});
-            renderBookings(); clearForm();
-        } catch(e){ alert("Error: "+e.message); }
-    }
 
-    async function deleteBooking(id) {
-        if (!confirm("Are you sure?")) return;
-        await fetch(`${BASE_URL}/${id}`, { method:'DELETE'});
-        renderBookings();
+        try {
+            const res = await fetch(`${BASE_URL}/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(dto)
+            });
+            if(res.ok) {
+                await triggerAutoEmail(dto, id);
+                renderBookings();
+                clearForm();
+            }
+        } catch (e) { showAlert("danger", "Failed to update booking details."); }
     }
 
     async function editBooking(id) {
-        const res = await fetch(`${BASE_URL}/${id}`);
-        const b = await res.json();
-        document.getElementById('bookingId').value = b.id;
-        document.getElementById('locationName').value = b.locationName;
-        document.getElementById('customerName').value = b.customerName;
-        document.getElementById('contactNumber').value = b.contactNumber;
-        document.getElementById('bookingDate').value = b.bookingDate;
-        document.getElementById('startTime').value = b.startTime;
-        document.getElementById('endTime').value = b.endTime;
-        document.getElementById('price').value = b.price;
-        document.getElementById('status').value = b.status;
-        document.getElementById('shootType').value = b.shootType;
+        try {
+            const res = await fetch(`${BASE_URL}/${id}`);
+            const b = await res.json();
 
-        document.getElementById('saveBtn').classList.add('d-none');
-        document.getElementById('updateBtn').classList.remove('d-none');
-    }
+            document.getElementById('bookingId').value = b.id;
+            document.getElementById('customerName').value = b.customerName;
+            document.getElementById('clientEmail').value = b.clientEmail;
+            document.getElementById('contactNumber').value = b.contactNumber;
+            document.getElementById('bookingDate').value = b.bookingDate;
+            document.getElementById('startTime').value = b.startTime;
+            document.getElementById('endTime').value = b.endTime;
+            document.getElementById('price').value = b.price;
+            document.getElementById('status').value = b.status;
+            document.getElementById('shootType').value = b.shootType;
 
-    function getFormData() {
-        return {
-            locationName: document.getElementById('locationName').value,
-            customerName: document.getElementById('customerName').value,
-            contactNumber: document.getElementById('contactNumber').value,
-            bookingDate: document.getElementById('bookingDate').value,
-            startTime: document.getElementById('startTime').value,
-            endTime: document.getElementById('endTime').value,
-            price: parseFloat(document.getElementById('price').value),
-            status: document.getElementById('status').value,
-            shootType: document.getElementById('shootType').value
-        };
+            document.getElementById('saveBtn').classList.add('d-none');
+            document.getElementById('updateBtn').classList.remove('d-none');
+            document.getElementById('invoiceBtn').classList.remove('d-none');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (e) { console.error("Error loading record:", e); }
     }
 
     function clearForm() {
         document.getElementById('bookingForm').reset();
+        document.getElementById('bookingId').value = '';
         document.getElementById('saveBtn').classList.remove('d-none');
         document.getElementById('updateBtn').classList.add('d-none');
+        document.getElementById('invoiceBtn').classList.add('d-none');
     }
 
     document.getElementById('saveBtn').addEventListener('click', saveBooking);
     document.getElementById('updateBtn').addEventListener('click', updateBooking);
     document.addEventListener('DOMContentLoaded', renderBookings);
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

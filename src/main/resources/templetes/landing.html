@@ -3,161 +3,268 @@
 <head>
   <meta charset="UTF-8">
   <title>Pahasara Studio | Cinematic Live Show</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
   <style>
     :root { --accent: #c5a059; }
-    body {
-      background: #000;
-      color: white;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      overflow: hidden;
-      height: 100vh;
+
+    body{
+      background:#000;
+      color:white;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      overflow:hidden;
+      height:100vh;
     }
 
-    /* --- THE KEN BURNS EFFECT (Slow Zoom) --- */
-    @keyframes kenburns {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.2); }
+    .animate__animated{
+      animation-duration:0.8s !important;
     }
 
-    .carousel-item {
-      height: 100vh;
-      overflow: hidden;
+    /* ===== TOP NAV ===== */
+    .top-nav{
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      padding:20px 60px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      z-index:1000;
+      background:rgba(0,0,0,0.3);
+      backdrop-filter:blur(10px);
     }
 
-    /* This applies the zoom to the background image */
-    .carousel-item.active .bg-img {
-      animation: kenburns 12s linear forwards;
+    .brand{
+      font-weight:700;
+      font-size:1.3rem;
+      letter-spacing:2px;
+      color:var(--accent);
     }
 
-    .bg-img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-size: cover;
-      background-position: center;
-      z-index: -1;
+    .nav-btn{
+      border:1px solid var(--accent);
+      color:var(--accent);
+      background:transparent;
+      padding:8px 22px;
+      border-radius:30px;
+      font-weight:600;
+      transition:0.3s ease;
     }
 
-    /* --- OVERLAYS & TEXT --- */
-    .overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 50%;
-      background: linear-gradient(transparent, rgba(0,0,0,0.95));
-      padding: 100px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
+    .nav-btn:hover{
+      background:var(--accent);
+      color:#000;
+      transform:translateY(-3px);
     }
 
-    .label {
-      text-transform: uppercase;
-      letter-spacing: 8px;
-      color: var(--accent);
-      font-weight: bold;
-      margin-bottom: 10px;
+    /* ===== CAROUSEL ===== */
+    @keyframes kenburns{
+      0%{transform:scale(1);}
+      100%{transform:scale(1.12);}
     }
 
-    /* Floating Animation for Owner Image */
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-20px); }
+    .carousel-item{
+      height:100vh;
+      overflow:hidden;
+      position:relative;
     }
 
-    .owner-img {
-      width: 450px;
-      height: 550px;
-      object-fit: cover;
-      border: 1px solid var(--accent);
-      border-radius: 30px;
-      animation: float 6s ease-in-out infinite;
-      box-shadow: 0 0 50px rgba(197, 160, 89, 0.2);
+    .carousel-item.active .bg-img{
+      animation:kenburns 5s linear forwards;
     }
 
-    .feedback-quote {
-      font-style: italic;
-      font-size: 3rem;
-      color: var(--accent);
-      line-height: 1.2;
-      max-width: 900px;
-      margin: 0 auto;
+    .bg-img{
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background-size:cover;
+      background-position:center;
+      z-index:-1;
     }
 
-    /* Custom Fade Transition */
-    .carousel-fade .carousel-item {
-      transition-duration: 2.5s;
+    .overlay{
+      position:absolute;
+      bottom:0;
+      width:100%;
+      height:50%;
+      background:linear-gradient(transparent,rgba(0,0,0,0.95));
+      padding:100px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+    }
+
+    .label{
+      text-transform:uppercase;
+      letter-spacing:8px;
+      color:var(--accent);
+      font-weight:bold;
+    }
+
+    .owner-img{
+      width:450px;
+      height:550px;
+      object-fit:cover;
+      border:1px solid var(--accent);
+      border-radius:30px;
+      animation:float 3s ease-in-out infinite;
+    }
+
+    @keyframes float{
+      0%,100%{transform:translateY(0);}
+      50%{transform:translateY(-15px);}
+    }
+
+    .feedback-quote{
+      font-style:italic;
+      font-size:3rem;
+      color:var(--accent);
+      max-width:900px;
+      margin:auto;
+    }
+
+    .carousel-fade .carousel-item{
+      transition-duration:0.6s;
+    }
+
+    .btn-accent{
+      background:linear-gradient(135deg,#b89045,#d4af37);
+      color:#111;
+      border-radius:40px;
+      font-weight:600;
+      padding:8px 25px;
+      transition:0.3s ease;
+    }
+
+    .btn-accent:hover{
+      transform:translateY(-3px);
+    }
+
+    /* ===== CUSTOM ARROWS ===== */
+    .carousel-control-prev,
+    .carousel-control-next{
+      width:5%;
+    }
+
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon{
+      background-color: rgba(0,0,0,0.6);
+      padding:25px;
+      border-radius:50%;
+      background-size:60% 60%;
+      border:1px solid var(--accent);
+      transition:0.3s ease;
+    }
+
+    .carousel-control-prev-icon:hover,
+    .carousel-control-next-icon:hover{
+      background-color: var(--accent);
+      transform:scale(1.1);
     }
   </style>
 </head>
+
 <body>
 
-<div id="studioCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="10000">
+<div class="top-nav">
+  <div class="brand">PAHASARA STUDIO</div>
+  <div>
+    <a href="loginRegister.html" class="nav-btn">Login / Sign Up</a>
+  </div>
+</div>
+
+<div id="studioCarousel" class="carousel slide carousel-fade"
+     data-bs-ride="carousel"
+     data-bs-interval="6000">
+
   <div class="carousel-inner">
 
+    <!-- SLIDE 1 -->
     <div class="carousel-item active">
-      <div class="bg-img" style="background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80');"></div>
+      <div class="bg-img" style="background-image:url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80');"></div>
       <div class="overlay">
         <p class="label animate__animated animate__fadeInLeft">Featured Session</p>
-        <h1 class="display-1 fw-bold animate__animated animate__fadeInUp animate__delay-1s">Capturing Eternal Love</h1>
-        <p class="fs-4 animate__animated animate__fadeInUp animate__delay-2s text-muted">A beautiful wedding story at Galle Face</p>
+        <h1 class="display-1 fw-bold animate__animated animate__fadeInUp">
+          Capturing Eternal Love
+        </h1>
+        <p class="fs-4 text-muted animate__animated animate__fadeInUp">
+          A beautiful wedding story at Galle Face
+        </p>
+        <div class="mt-3 animate__animated animate__fadeInUp">
+          <a href="social-media.html" class="btn btn-accent">
+            📱 Manage Social Media
+          </a>
+        </div>
       </div>
     </div>
 
-    <div class="carousel-item" style="background: #050505;">
+    <!-- SLIDE 2 -->
+    <div class="carousel-item" style="background:#050505;">
       <div class="container h-100 d-flex align-items-center">
         <div class="row w-100 align-items-center">
           <div class="col-md-5 text-center">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80" class="owner-img animate__animated animate__zoomIn" alt="Owner">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
+                 class="owner-img animate__animated animate__zoomIn">
           </div>
           <div class="col-md-7 ps-5">
             <p class="label animate__animated animate__fadeInDown">The Visionary</p>
-            <h1 class="display-2 fw-bold animate__animated animate__fadeInRight animate__delay-1s">Kasun Perera</h1>
-            <p class="lead fs-3 text-muted animate__animated animate__fadeInRight animate__delay-2s">"I don't just take photos; I capture the heartbeat of the moment."</p>
-            <div class="mt-4 animate__animated animate__fadeInUp animate__delay-3s">
-              <span style="color:var(--accent)">12+ International Awards | Professional Cinematographer</span>
-            </div>
+            <h1 class="display-2 fw-bold animate__animated animate__fadeInRight">
+              Kasun Perera
+            </h1>
+            <p class="lead fs-3 text-muted animate__animated animate__fadeInRight">
+              "I don't just take photos; I capture the heartbeat of the moment."
+            </p>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="carousel-item" style="background: #080808;">
+    <!-- SLIDE 3 -->
+    <div class="carousel-item" style="background:#080808;">
       <div class="container h-100 d-flex flex-column justify-content-center text-center">
         <p class="label animate__animated animate__fadeIn">Client Testimonials</p>
-        <div class="animate__animated animate__fadeInUp animate__delay-1s">
-          <h2 class="feedback-quote">"The team at Pahasara made our wedding look like a fairy tale. Simply the best in Sri Lanka!"</h2>
+        <div class="animate__animated animate__fadeInUp">
+          <h2 class="feedback-quote">
+            "The team at Pahasara made our wedding look like a fairy tale. Simply the best in Sri Lanka!"
+          </h2>
           <h4 class="mt-4 fw-light">— Nimal & Sanduni</h4>
-          <div class="mt-3 text-warning fs-2">★★★★★</div>
         </div>
       </div>
     </div>
 
   </div>
+
+  <!-- ARROWS -->
+  <button class="carousel-control-prev" type="button" data-bs-target="#studioCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+
+  <button class="carousel-control-next" type="button" data-bs-target="#studioCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-  // Refresh animations when slide changes
-  var myCarousel = document.getElementById('studioCarousel')
-  myCarousel.addEventListener('slid.bs.carousel', function () {
-    // This logic ensures animations re-trigger every time a slide comes back
-    const activeItem = document.querySelector('.carousel-item.active');
-    const animatables = activeItem.querySelectorAll('.animate__animated');
-    animatables.forEach(el => {
-      const animation = el.classList[1]; // get the animation class
-      el.classList.remove(animation);
-      void el.offsetWidth; // trigger reflow
-      el.classList.add(animation);
+  const carousel = document.getElementById('studioCarousel');
+
+  carousel.addEventListener('slide.bs.carousel', function () {
+    document.querySelectorAll('.animate__animated').forEach(el => {
+      el.classList.remove('animate__fadeInUp','animate__fadeInLeft','animate__fadeInRight','animate__fadeInDown','animate__zoomIn');
+      void el.offsetWidth;
+      el.classList.add('animate__fadeInUp');
     });
-  })
+  });
 </script>
+
 </body>
 </html>

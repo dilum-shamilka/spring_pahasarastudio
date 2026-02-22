@@ -7,7 +7,6 @@ import lk.ijse.pahasarastudiospringfinal.repo.BookingRepo;
 import lk.ijse.pahasarastudiospringfinal.repo.InvoiceRepo;
 import lk.ijse.pahasarastudiospringfinal.service.InvoiceService;
 import lk.ijse.pahasarastudiospringfinal.util.VarList;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +33,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setInvoiceNumber(dto.getInvoiceNumber());
         invoice.setDate(dto.getDate());
         invoice.setTotalAmount(dto.getTotalAmount());
+        invoice.setPaidAmount(dto.getPaidAmount()); // Map paidAmount
         invoice.setStatus(dto.getPaymentStatus());
         invoice.setBooking(booking.get());
 
@@ -48,7 +48,8 @@ public class InvoiceServiceImpl implements InvoiceService {
                 inv.getInvoiceNumber(),
                 inv.getDate(),
                 inv.getTotalAmount(),
-                inv.getStatus(), // Maps to paymentStatus in DTO
+                inv.getPaidAmount(), // Map paidAmount back to DTO
+                inv.getStatus(),
                 inv.getBooking().getId()
         )).collect(Collectors.toList());
     }
@@ -65,6 +66,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setInvoiceNumber(dto.getInvoiceNumber());
         invoice.setDate(dto.getDate());
         invoice.setTotalAmount(dto.getTotalAmount());
+        invoice.setPaidAmount(dto.getPaidAmount()); // Update paidAmount
         invoice.setStatus(dto.getPaymentStatus());
         invoice.setBooking(booking.get());
 
@@ -85,11 +87,10 @@ public class InvoiceServiceImpl implements InvoiceService {
     public InvoiceDTO getInvoiceById(Long id) {
         return invoiceRepo.findById(id).map(inv -> new InvoiceDTO(
                 inv.getId(), inv.getInvoiceNumber(), inv.getDate(),
-                inv.getTotalAmount(), inv.getStatus(), inv.getBooking().getId()
+                inv.getTotalAmount(), inv.getPaidAmount(), inv.getStatus(), inv.getBooking().getId()
         )).orElse(null);
     }
 
-    // Default interface stubs
     @Override public int getTotalInvoiceCount() { return (int) invoiceRepo.count(); }
     @Override public InvoiceDTO getInvoiceByNumber(String n) { return null; }
     @Override public List<InvoiceDTO> getInvoicesByStatus(String s) { return null; }

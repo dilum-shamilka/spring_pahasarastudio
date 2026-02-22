@@ -4,180 +4,375 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pahasara Studio | Invoice System</title>
-
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        body {
-            background-color: #f4f7f6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-bottom: 50px;
-        }
-
-        .main-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
-
-        .card-header {
-            font-weight: 600;
-        }
-
-        table.table tbody tr:hover {
-            background-color: rgba(0,0,0,0.03);
-            transition: background-color 0.2s;
-        }
-
-        table.table td,
-        table.table th {
-            vertical-align: middle;
-        }
-
-        .btn-action {
-            min-width: 100px;
-        }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .bg-paid {
-            background-color: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .bg-unpaid {
-            background-color: #f8d7da;
-            color: #842029;
-        }
-
-        @media (max-width: 768px) {
-            .btn-action {
-                width: 100%;
-                margin-bottom: 5px;
-            }
-        }
-
-        /* Dashboard Button */
-        .nav-buttons .btn {
-            margin-bottom: 15px;
-        }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+        .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .bg-paid { background-color: #d1e7dd; color: #0f5132; }
+        .bg-unpaid { background-color: #f8d7da; color: #842029; }
+        .bg-advanced { background-color: #fff3cd; color: #664d03; }
+        .nav-buttons { margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container py-5">
+    <div id="alertPlaceholder"></div>
 
-    <!-- Dashboard Button -->
-
-    <!-- Dashboard & Navigation Buttons -->
     <div class="nav-buttons mb-4">
-        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm me-2">
             <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
         </a>
-        <a href="booking.html" class="btn btn-outline-warning btn-sm">
-            <i class="fas fa-calendar-check me-1"></i> Booking Management
+        <a href="booking.html" class="btn btn-outline-info btn-sm me-2">
+            <i class="fas fa-calendar-check me-1"></i> Bookings
         </a>
-        <a href="payment.html" class="btn btn-outline-success btn-sm">
-            <i class="fas fa-credit-card me-1"></i> Payment Management
+        <a href="payment.html" class="btn btn-outline-warning btn-sm">
+            <i class="fas fa-credit-card me-1"></i> Payments
         </a>
     </div>
-
 
     <div class="text-center mb-5">
         <h2 class="fw-bold">💰 Billing & Invoices</h2>
-        <p class="text-muted">Manage studio bookings and payments</p>
+        <p class="text-muted">Generate and Send PDF Receipts</p>
     </div>
 
-    <!-- Invoice Form -->
-    <div class="card main-card mb-5">
+    <div class="card main-card">
         <div class="card-header bg-dark text-white py-3">
             <h5 class="mb-0" id="formHeader">Generate New Invoice</h5>
         </div>
         <div class="card-body p-4">
             <form id="invoiceForm">
                 <input type="hidden" id="invoiceId">
-
                 <div class="row g-3">
-
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Invoice Number</label>
-                        <input type="text" id="invoiceNumber" class="form-control" placeholder="e.g. INV-1001" required>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Invoice #</label>
+                        <input type="text" id="invoiceNumber" class="form-control" placeholder="INV-1001" required>
                     </div>
-
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Booking ID</label>
-                        <input type="number" id="bookingId" class="form-control" placeholder="Reference ID" required>
+                        <div class="input-group">
+                            <input type="number" id="bookingId" class="form-control" placeholder="ID" required>
+                            <button class="btn btn-primary" type="button" onclick="fetchBookingDetails()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
                     </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Billing Date</label>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Date</label>
                         <input type="date" id="invoiceDate" class="form-control" required>
                     </div>
-
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Total (LKR)</label>
+                        <input type="number" step="0.01" id="totalAmount" class="form-control" required>
+                    </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold">Total Amount (LKR)</label>
-                        <input type="number" step="0.01" id="totalAmount" class="form-control" placeholder="0.00" required>
+                        <label class="form-label fw-semibold">Paid Amount</label>
+                        <input type="number" step="0.01" id="paidAmount" class="form-control" value="0.00">
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Payment Status</label>
+                    <div id="bookingDetailsCard" class="col-12 d-none mt-2">
+                        <div class="alert alert-info py-2 px-3 mb-0 d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-envelope me-2"></i><strong>Client Email:</strong> <span id="displayCust">--</span></span>
+                            <span><i class="fas fa-box me-2"></i><strong>Package:</strong> <span id="displayServ">--</span></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Status</label>
                         <select id="paymentStatus" class="form-select">
                             <option value="UNPAID">UNPAID</option>
-                            <option value="PAID">PAID</option>
                             <option value="ADVANCED">ADVANCED</option>
+                            <option value="PAID">PAID</option>
                         </select>
                     </div>
-
-                    <div class="col-md-9 d-flex align-items-end justify-content-end gap-2 flex-wrap">
-                        <button type="button" class="btn btn-secondary btn-action" onclick="resetUI()">Clear</button>
-                        <button type="submit" id="btnSave" class="btn btn-success btn-action">Save</button>
-                        <button type="button" id="btnUpdate" class="btn btn-primary btn-action d-none" onclick="updateInvoice()">Update</button>
+                    <div class="col-md-10 text-end mt-4">
+                        <button type="button" class="btn btn-secondary px-4 me-2" onclick="resetUI()">Clear</button>
+                        <button type="submit" id="btnSave" class="btn btn-success px-4">Save & Send Email</button>
+                        <button type="button" id="btnUpdate" class="btn btn-primary d-none px-4" onclick="updateInvoice()">Update & Send Email</button>
                     </div>
-
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Invoice Table -->
-    <div class="card main-card">
-        <div class="card-body p-0">
-            <table class="table table-bordered table-striped mb-0">
+    <div class="card main-card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
-                    <th>Invoice #</th>
-                    <th>Booking ID</th>
+                    <th class="ps-3">ID</th>
+                    <th>Inv #</th>
+                    <th>Booking</th>
                     <th>Date</th>
-                    <th>Amount</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
                     <th>Status</th>
                     <th class="text-center">Actions</th>
                 </tr>
                 </thead>
-                <tbody id="invoiceTableBody">
-                </tbody>
+                <tbody id="invoiceTableBody"></tbody>
             </table>
         </div>
     </div>
-
 </div>
 
-<!-- jQuery & Bootstrap -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const BASE_URL = "http://localhost:8080/api/v1/invoices";
+    const BOOKING_URL = "http://localhost:8080/api/v1/bookings";
+    const EMAIL_URL = "http://localhost:8080/api/v1/email/send";
 
-<!-- Your Original JS -->
-<script src="/static/js/invoice.js"></script>
+    document.addEventListener("DOMContentLoaded", getAllInvoices);
 
+    // --- ALERT HELPER ---
+    function showAlert(type, msg) {
+        const alertBox = document.getElementById('alertPlaceholder');
+        alertBox.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    }
+
+    // --- FETCH BOOKING DETAILS ---
+    async function fetchBookingDetails() {
+        const bId = document.getElementById('bookingId').value;
+        if (!bId) return;
+
+        try {
+            const res = await fetch(`${BOOKING_URL}/get/${bId}`);
+            const data = await res.json();
+
+            if (data.code === "00" && data.content) {
+                const booking = data.content;
+                document.getElementById('bookingDetailsCard').classList.remove('d-none');
+                document.getElementById('displayCust').innerText = booking.clientEmail || "--";
+                document.getElementById('displayServ').innerText = booking.serviceName || "Studio Session";
+                document.getElementById('totalAmount').value = booking.totalPrice || 0;
+                return true;
+            } else {
+                showAlert("danger", "Booking ID not found!");
+                return false;
+            }
+        } catch (err) {
+            console.error("Error fetching booking:", err);
+            return false;
+        }
+    }
+
+    // --- EMAIL SENDER LOGIC ---
+    async function triggerInvoiceEmail(dto) {
+        const clientEmail = document.getElementById('displayCust').innerText;
+        if (!clientEmail || clientEmail === "--") return;
+
+        let subject = `📄 Invoice Update: ${dto.invoiceNumber} - Pahasara Studio`;
+        let statusMsg = "";
+        const balance = (dto.totalAmount - dto.paidAmount).toFixed(2);
+
+        if (dto.paymentStatus === 'PAID') {
+            statusMsg = "Thank you! Your payment has been received in full. We look forward to seeing you! ✨";
+        } else if (dto.paymentStatus === 'ADVANCED') {
+            statusMsg = "We've received your advance payment. Your booking is now secured. 💰";
+        } else {
+            statusMsg = "A new invoice has been generated for your upcoming session. 📋";
+        }
+
+        const msg = `Hello,\n\n` +
+            `${statusMsg}\n\n` +
+            `Invoice Details:\n` +
+            `--------------------------\n` +
+            `Invoice No   : ${dto.invoiceNumber}\n` +
+            `Total Amount : LKR ${dto.totalAmount.toFixed(2)}\n` +
+            `Amount Paid  : LKR ${dto.paidAmount.toFixed(2)}\n` +
+            `Balance Due  : LKR ${balance}\n` +
+            `Status       : ${dto.paymentStatus}\n\n` +
+            `If you have any questions, feel free to reply to this email.\n\n` +
+            `Best regards,\nPahasara Studio Team`;
+
+        try {
+            await fetch(EMAIL_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ toEmail: clientEmail, subject: subject, message: msg })
+            });
+        } catch (err) {
+            console.error("Email failed to send", err);
+        }
+    }
+
+    // --- SAVE INVOICE ---
+    document.getElementById('invoiceForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!document.getElementById('btnUpdate').classList.contains('d-none')) return;
+
+        const dto = getFormData();
+        const btn = document.getElementById('btnSave');
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`${BASE_URL}/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dto)
+            });
+            const data = await res.json();
+
+            if(data.code === "00") {
+                await triggerInvoiceEmail(dto);
+                showAlert("success", "Invoice Saved and Email Notification Sent!");
+                resetUI();
+                getAllInvoices();
+            }
+        } catch (err) {
+            showAlert("danger", "Failed to save invoice.");
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // --- UPDATE INVOICE ---
+    async function updateInvoice() {
+        const dto = getFormData();
+        const btn = document.getElementById('btnUpdate');
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`${BASE_URL}/update`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dto)
+            });
+            const data = await res.json();
+
+            if(data.code === "00") {
+                await triggerInvoiceEmail(dto);
+                showAlert("info", "Invoice Updated and Email Notification Sent!");
+                resetUI();
+                getAllInvoices();
+            }
+        } catch (err) {
+            showAlert("danger", "Failed to update invoice.");
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // --- FETCH ALL INVOICES ---
+    function getAllInvoices() {
+        fetch(`${BASE_URL}/getAll`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('invoiceTableBody');
+                tbody.innerHTML = '';
+                if (data.code === "00" && data.content) {
+                    data.content.forEach(inv => {
+                        const balance = (inv.totalAmount - inv.paidAmount).toFixed(2);
+                        let statusClass = inv.paymentStatus === 'PAID' ? 'bg-paid' :
+                            inv.paymentStatus === 'UNPAID' ? 'bg-unpaid' : 'bg-advanced';
+
+                        tbody.innerHTML += `
+                        <tr>
+                            <td class="ps-3">#${inv.id}</td>
+                            <td class="fw-bold">${inv.invoiceNumber}</td>
+                            <td>#${inv.bookingId}</td>
+                            <td>${inv.date}</td>
+                            <td>${inv.totalAmount.toFixed(2)}</td>
+                            <td class="text-success">${inv.paidAmount.toFixed(2)}</td>
+                            <td class="text-danger fw-bold">${balance}</td>
+                            <td><span class="status-badge ${statusClass}">${inv.paymentStatus}</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-success me-1" onclick="downloadPDF(${inv.id})"><i class="fas fa-file-pdf"></i></button>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="prepareUpdate(${inv.id})"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteInvoice(${inv.id})"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`;
+                    });
+                }
+            });
+    }
+
+    async function prepareUpdate(id) {
+        try {
+            const res = await fetch(`${BASE_URL}/get/${id}`);
+            const data = await res.json();
+            if (data.code === "00") {
+                const inv = data.content;
+                document.getElementById('invoiceId').value = inv.id;
+                document.getElementById('invoiceNumber').value = inv.invoiceNumber;
+                document.getElementById('bookingId').value = inv.bookingId;
+                document.getElementById('invoiceDate').value = inv.date;
+                document.getElementById('totalAmount').value = inv.totalAmount;
+                document.getElementById('paidAmount').value = inv.paidAmount;
+                document.getElementById('paymentStatus').value = inv.paymentStatus;
+
+                await fetchBookingDetails();
+
+                document.getElementById('btnSave').classList.add('d-none');
+                document.getElementById('btnUpdate').classList.remove('d-none');
+                document.getElementById('formHeader').innerText = "Edit Invoice #" + inv.id;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function deleteInvoice(id) {
+        if(confirm("Are you sure you want to delete this invoice?")) {
+            fetch(`${BASE_URL}/delete/${id}`, { method: 'DELETE' }).then(() => getAllInvoices());
+        }
+    }
+
+    async function downloadPDF(id) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        try {
+            const res = await fetch(`${BASE_URL}/get/${id}`);
+            const data = await res.json();
+            const inv = data.content;
+
+            doc.setFontSize(20);
+            doc.setTextColor(13, 110, 253);
+            doc.text("PAHASARA STUDIO", 14, 20);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Invoice No: ${inv.invoiceNumber}`, 14, 30);
+            doc.text(`Date: ${inv.date}`, 14, 35);
+
+            doc.autoTable({
+                startY: 45,
+                head: [['Description', 'Total (LKR)', 'Paid (LKR)', 'Balance (LKR)']],
+                body: [[`Photography Session (#${inv.bookingId})`, inv.totalAmount.toFixed(2), inv.paidAmount.toFixed(2), (inv.totalAmount-inv.paidAmount).toFixed(2)]],
+                theme: 'striped',
+                headStyles: { fillColor: [33, 37, 41] }
+            });
+
+            doc.text("Thank you for your business!", 14, doc.lastAutoTable.finalY + 20);
+            doc.save(`Inv_${inv.invoiceNumber}.pdf`);
+        } catch (e) { console.error(e); }
+    }
+
+    function getFormData() {
+        return {
+            id: document.getElementById('invoiceId').value ? parseInt(document.getElementById('invoiceId').value) : null,
+            invoiceNumber: document.getElementById('invoiceNumber').value,
+            bookingId: parseInt(document.getElementById('bookingId').value),
+            date: document.getElementById('invoiceDate').value,
+            totalAmount: parseFloat(document.getElementById('totalAmount').value),
+            paidAmount: parseFloat(document.getElementById('paidAmount').value || 0),
+            paymentStatus: document.getElementById('paymentStatus').value
+        };
+    }
+
+    function resetUI() {
+        document.getElementById('invoiceForm').reset();
+        document.getElementById('invoiceId').value = "";
+        document.getElementById('btnSave').classList.remove('d-none');
+        document.getElementById('btnUpdate').classList.add('d-none');
+        document.getElementById('bookingDetailsCard').classList.add('d-none');
+        document.getElementById('formHeader').innerText = "Generate New Invoice";
+    }
+</script>
 </body>
 </html>

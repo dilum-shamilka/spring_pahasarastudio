@@ -13,6 +13,7 @@ public class InvoiceDTO {
     private String invoiceNumber;
     private LocalDate date;
     private double totalAmount;
-    private String paymentStatus; // corresponds to Invoice.status in entity
-    private Long bookingId;       // reference to Booking
+    private double paidAmount; // Added this field
+    private String paymentStatus;
+    private Long bookingId;
 }

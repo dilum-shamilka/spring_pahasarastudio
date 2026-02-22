@@ -28,7 +28,10 @@ public class Invoice {
     private double totalAmount;
 
     @Column(nullable = false)
-    private String status = "UNPAID"; // status stored in DB
+    private double paidAmount; // Added this field
+
+    @Column(nullable = false)
+    private String status = "UNPAID";
 
     @OneToOne
     @JoinColumn(name = "booking_id", referencedColumnName = "id", nullable = false)

@@ -20,12 +20,14 @@ public class IndoorLocationBooking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String locationName;
+    private String locationName; // The Studio/Room name
 
     @Enumerated(EnumType.STRING)
     private ShootType shootType;
 
     private String customerName;
+
+    private String clientEmail; // New Field Added
 
     private String contactNumber;
 
@@ -37,5 +39,5 @@ public class IndoorLocationBooking {
 
     private BigDecimal price;
 
-    private String status; // BOOKED / COMPLETED / CANCELLED
+    private String status;
 }

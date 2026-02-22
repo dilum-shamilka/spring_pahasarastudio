@@ -17,6 +17,7 @@ public class IndoorLocationBookingDTO {
     private String locationName;
     private ShootType shootType;
     private String customerName;
+    private String clientEmail; // New Field Added
     private String contactNumber;
     private LocalDate bookingDate;
     private LocalTime startTime;

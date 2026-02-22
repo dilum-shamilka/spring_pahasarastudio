@@ -37,6 +37,7 @@ public class IndoorLocationBookingServiceImpl implements IndoorLocationBookingSe
         existing.setLocationName(dto.getLocationName());
         existing.setShootType(dto.getShootType());
         existing.setCustomerName(dto.getCustomerName());
+        existing.setClientEmail(dto.getClientEmail()); // Update Email
         existing.setContactNumber(dto.getContactNumber());
         existing.setBookingDate(dto.getBookingDate());
         existing.setStartTime(dto.getStartTime());
@@ -48,9 +49,7 @@ public class IndoorLocationBookingServiceImpl implements IndoorLocationBookingSe
     }
 
     @Override
-    public void delete(Long id) {
-        repository.deleteById(id);
-    }
+    public void delete(Long id) { repository.deleteById(id); }
 
     @Override
     public IndoorLocationBookingDTO getById(Long id) {
@@ -69,6 +68,7 @@ public class IndoorLocationBookingServiceImpl implements IndoorLocationBookingSe
                 .locationName(entity.getLocationName())
                 .shootType(entity.getShootType())
                 .customerName(entity.getCustomerName())
+                .clientEmail(entity.getClientEmail()) // Map Email
                 .contactNumber(entity.getContactNumber())
                 .bookingDate(entity.getBookingDate())
                 .startTime(entity.getStartTime())
@@ -84,6 +84,7 @@ public class IndoorLocationBookingServiceImpl implements IndoorLocationBookingSe
                 .locationName(dto.getLocationName())
                 .shootType(dto.getShootType())
                 .customerName(dto.getCustomerName())
+                .clientEmail(dto.getClientEmail()) // Map Email
                 .contactNumber(dto.getContactNumber())
                 .bookingDate(dto.getBookingDate())
                 .startTime(dto.getStartTime())
