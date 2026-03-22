@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pahasara Studio | Executive Monthly Report</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* --- Base Styles --- */
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+        .report-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); background: #fff; margin-bottom: 25px; }
+        .stat-box { padding: 25px; border-radius: 12px; transition: 0.3s; color: white; position: relative; overflow: hidden; height: 100%; }
+        .bg-income { background: linear-gradient(45deg, #198754, #2fb344); }
+        .bg-expense { background: linear-gradient(45deg, #dc3545, #ff5f6d); }
+        .bg-profit { background: linear-gradient(45deg, #0d6efd, #0dcaf0); }
+        .report-label { font-size: 0.85rem; text-transform: uppercase; opacity: 0.9; font-weight: 600; }
+        .report-value { font-size: 1.8rem; font-weight: 700; }
+        .section-title { border-left: 5px solid #0d6efd; padding-left: 15px; font-weight: 700; color: #2c3e50; }
+        .mini-stat { border-radius: 10px; padding: 12px; background: #f8f9fa; border-left: 4px solid #0d6efd; transition: transform 0.2s; }
+
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+
+        /* --- Custom Responsive Enhancements --- */
+
+        /* Tablet & Mobile Header Adjustments */
+        @media (max-width: 768px) {
+            .header-flex { flex-direction: column; align-items: flex-start !important; gap: 15px; }
+            .header-flex .d-flex { width: 100%; justify-content: space-between; }
+            .report-value { font-size: 1.5rem; }
+            .stat-box { padding: 15px; }
+        }
+
+        /* Mobile View: Transform Expense Table to Cards (Max 576px) */
+        @media (max-width: 576px) {
+            .table-responsive { border: none; }
+            thead { display: none; } /* Hide table headers */
+
+            #expenseTableBody tr {
+                display: block;
+                margin-bottom: 1rem;
+                background: #fff;
+                border: 1px solid #dee2e6;
+                border-radius: 10px;
+                padding: 10px;
+            }
+
+            #expenseTableBody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: none;
+                padding: 5px 10px;
+            }
+
+            #expenseTableBody td:first-child { border-bottom: 1px solid #eee; margin-bottom: 5px; font-weight: bold; }
+
+            /* Inject data labels */
+            #expenseTableBody td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.7rem;
+                color: #6c757d;
+            }
+
+            .report-label { font-size: 0.75rem; }
+            .report-value { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+    <div class="spinner-border text-primary" role="status"></div>
+</div>
+
+<div class="container py-4 py-md-5">
+    <div id="emailStatusPlaceholder"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 header-flex">
+        <div>
+            <h2 class="fw-bold mb-0">📊 Monthly Business Report</h2>
+            <p class="text-muted">Consolidated Studio Analytics</p>
+        </div>
+        <div class="d-flex gap-2">
+            <input type="month" id="reportMonthPicker" class="form-control form-control-sm" onchange="initReport()">
+            <button class="btn btn-dark shadow-sm" onclick="downloadPDFReport()"><i class="fas fa-file-pdf"></i></button>
+            <a href="dashboard.html" class="btn btn-outline-primary shadow-sm"><i class="fas fa-home"></i></a>
+        </div>
+    </div>
+
+    <div class="card report-card p-3 p-md-4">
+        <h5 class="section-title mb-4">Executive Summary: <span id="rptMonthName" class="text-primary">...</span></h5>
+        <div class="row g-3 g-md-4">
+            <div class="col-12 col-md-4">
+                <div class="stat-box bg-income">
+                    <div class="report-label">Total Cash Inflow</div>
+                    <div class="report-value" id="totalInflow">Rs. 0.00</div>
+                    <small>Studio + Indoor + Sales</small>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="stat-box bg-expense">
+                    <div class="report-label">Operational Outflow</div>
+                    <div class="report-value" id="totalOutflow">Rs. 0.00</div>
+                    <small>Production + Stock + Costs</small>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="stat-box bg-profit" id="profitCard">
+                    <div class="report-label">Net Business Profit</div>
+                    <div class="report-value" id="netProfit">Rs. 0.00</div>
+                    <small id="profitMargin" class="fw-bold">Margin: 0%</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card report-card h-100">
+                <div class="card-header bg-white py-3 fw-bold"><i class="fas fa-chart-line me-2"></i>REVENUE SOURCES</div>
+                <div class="card-body" id="revenueContainer"></div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card report-card h-100">
+                <div class="card-header bg-white py-3 fw-bold"><i class="fas fa-receipt me-2"></i>EXPENSE BREAKDOWN</div>
+                <div class="card-body p-0 p-md-3">
+                    <div class="table-responsive">
+                        <table class="table mb-0 table-hover">
+                            <thead class="table-light">
+                            <tr><th>Category</th><th class="text-end">Amount</th></tr>
+                            </thead>
+                            <tbody id="expenseTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ... [Previous API and Setup Logic stays the same] ...
+    const API_FINANCE = "http://localhost:8080/api/v1/invoices/getAll";
+    const API_COSTS   = "http://localhost:8080/api/v1/costs/all";
+    const API_ROOM23  = "http://localhost:8080/api/v1/indoor-booking";
+    const API_SALES   = "http://localhost:8080/api/v1/sales";
+    const token = localStorage.getItem("jwt_token") || localStorage.getItem("token");
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if(!token) console.warn("Access Denied: No Token");
+        const d = new Date();
+        document.getElementById('reportMonthPicker').value = d.toISOString().substring(0, 7);
+        initReport();
+    });
+
+    async function initReport() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        const headers = { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" };
+        const monthFilter = document.getElementById('reportMonthPicker').value;
+
+        try {
+            const [fin, cost, room, sales] = await Promise.all([
+                fetch(API_FINANCE, { headers }).then(r => r.json()),
+                fetch(API_COSTS, { headers }).then(r => r.json()),
+                fetch(API_ROOM23, { headers }).then(r => r.json()),
+                fetch(API_SALES, { headers }).then(r => r.json())
+            ]);
+
+            const getData = (res) => res.content || res || [];
+            processData(getData(fin), getData(cost), getData(room), getData(sales), monthFilter);
+        } catch (err) { console.error("Fetch Error:", err); }
+        finally { document.getElementById('loadingOverlay').style.display = 'none'; }
+    }
+
+    function processData(invoices, costs, bookings, sales, month) {
+        const dateObj = new Date(month + "-01");
+        document.getElementById('rptMonthName').innerText = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        const fmt = (v) => "Rs. " + Number(v).toLocaleString(undefined, {minimumFractionDigits: 2});
+
+        const studioRev = invoices.filter(i => i.date?.startsWith(month)).reduce((s, i) => s + parseFloat(i.paidAmount || 0), 0);
+        const roomRev = bookings.filter(b => b.bookingDate?.startsWith(month)).reduce((s, b) => s + parseFloat(b.price || 0), 0);
+        const frameRev = sales.filter(s => s.saleTime?.startsWith(month)).reduce((sum, s) => sum + parseFloat(s.total || 0), 0);
+
+        const mCosts = costs.filter(c => c.date?.startsWith(month));
+        let cD = { staff: 0, equip: 0, shoot: 0, oil: 0, prod: 0, inv: 0 };
+        mCosts.forEach(c => {
+            cD.staff += parseFloat(c.staffSalary || 0);
+            cD.equip += parseFloat(c.equipmentCost || 0);
+            cD.shoot += parseFloat(c.photoshootCost || 0);
+            cD.oil += parseFloat(c.vehicleOilCost || 0);
+            cD.prod += (parseFloat(c.editCost || 0) + parseFloat(c.printCost || 0));
+            cD.inv += parseFloat(c.inventoryCost || 0);
+        });
+
+        const totalInflow = studioRev + frameRev + roomRev;
+        const totalExp = Object.values(cD).reduce((x, y) => x + y, 0);
+        const netProfit = totalInflow - totalExp;
+
+        document.getElementById('totalInflow').innerText = fmt(totalInflow);
+        document.getElementById('totalOutflow').innerText = fmt(totalExp);
+        document.getElementById('netProfit').innerText = fmt(netProfit);
+        document.getElementById('profitMargin').innerText = `Margin: ${totalInflow > 0 ? ((netProfit/totalInflow)*100).toFixed(1) : 0}%`;
+
+        document.getElementById('revenueContainer').innerHTML = `
+            <div class="mini-stat mb-2"><span>Studio Invoices</span><span class="float-end fw-bold">${fmt(studioRev)}</span></div>
+            <div class="mini-stat mb-2"><span>Indoor Studio</span><span class="float-end fw-bold text-primary">${fmt(roomRev)}</span></div>
+            <div class="mini-stat"><span>Frame Sales</span><span class="float-end fw-bold text-success">${fmt(frameRev)}</span></div>
+        `;
+
+        renderExpenseTable(cD);
+    }
+
+    function renderExpenseTable(cD) {
+        const rows = [
+            ["Staff Salaries", cD.staff], ["Equipment", cD.equip],
+            ["Shoot Costs", cD.shoot], ["Fuel/Vehicle", cD.oil],
+            ["Production", cD.prod], ["Inventory", cD.inv]
+        ];
+        document.getElementById('expenseTableBody').innerHTML = rows.map(r =>
+            `<tr><td data-label="Category">${r[0]}</td><td data-label="Amount" class="text-end fw-bold">Rs. ${r[1].toLocaleString()}</td></tr>`
+        ).join('');
+    }
+
+    function downloadPDFReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text("Pahasara Studio Report", 14, 20);
+        doc.autoTable({
+            startY: 30,
+            head: [['Metric', 'Value']],
+            body: [
+                ['Total Inflow', document.getElementById('totalInflow').innerText],
+                ['Total Outflow', document.getElementById('totalOutflow').innerText],
+                ['Net Profit', document.getElementById('netProfit').innerText]
+            ]
+        });
+        doc.save(`Pahasara_Report.pdf`);
+    }
+</script>
+</body>
+</html>
