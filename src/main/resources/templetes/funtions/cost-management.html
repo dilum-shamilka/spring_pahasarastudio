@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pahasara Studio | Photoshoot Cost Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI'; padding-bottom: 50px; }
+        .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .btn-action { width: 110px; }
+        table.table tbody tr:hover { background-color: rgba(0,0,0,0.03); transition: 0.2s; }
+        table.table td, table.table th { vertical-align: middle; font-size: 0.85rem; white-space: nowrap; }
+        .card-header-title { font-weight: 600; color: #2c3e50; }
+        .currency-symbol { font-weight: bold; color: #198754; }
+        .table-dark th { background-color: #212529; }
+
+        /* --- INTEGRATED RESPONSIVE MEDIA QUERIES --- */
+
+        /* Laptop/Desktop (Large Screens) */
+        @media (min-width: 992px) {
+            .container { max-width: 1100px; }
+        }
+
+        /* Tablet (Max 768px) */
+        @media (max-width: 768px) {
+            .btn-action {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .table-responsive {
+                border-radius: 8px;
+                border: 1px solid #dee2e6;
+            }
+            h2 { font-size: 1.6rem; }
+            .header-flex { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+        }
+
+        /* Mobile Large (Max 425px) */
+        @media (max-width: 425px) {
+            .container { margin-top: 2rem !important; }
+            .card-body { padding: 1.2rem !important; }
+            .table { font-size: 0.8rem; }
+            .action-btns { display: flex; gap: 4px; }
+        }
+
+        /* Mobile Small (Max 320px) */
+        @media (max-width: 320px) {
+            h2 { font-size: 1.3rem; }
+            .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+
+    <div class="mb-3">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <h2 class="mb-4">💰 Cost Management</h2>
+
+    <div class="card main-card mb-4">
+        <div class="card-body">
+            <h5 class="mb-4 card-header-title">Record New Expenses</h5>
+
+            <form id="costForm">
+                <input type="hidden" id="costId">
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-3">
+                        <label class="small fw-bold">Date</label>
+                        <input type="date" id="costDate" class="form-control" required>
+                    </div>
+
+                    <div class="col-12 col-md-9">
+                        <label class="small fw-bold">Description</label>
+                        <input type="text" id="description" class="form-control" placeholder="Context of expense">
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                        <label class="small fw-bold">Staff Salary</label>
+                        <input type="number" id="staffSalary" class="form-control" value="0" step="0.01">
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                        <label class="small fw-bold">Equipment</label>
+                        <input type="number" id="equipmentCost" class="form-control" value="0" step="0.01">
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                        <label class="small fw-bold">Shoot Cost</label>
+                        <input type="number" id="photoshootCost" class="form-control" value="0" step="0.01">
+                    </div>
+
+                    <div class="col-6 col-md-3">
+                        <label class="small fw-bold">Vehicle Oil</label>
+                        <input type="number" id="vehicleOilCost" class="form-control" value="0" step="0.01">
+                    </div>
+
+                    <div class="col-6 col-md-4">
+                        <label class="small fw-bold">Inventory</label>
+                        <input type="number" id="inventoryCost" class="form-control" value="0" step="0.01">
+                    </div>
+
+                    <div class="col-6 col-md-4">
+                        <label class="small fw-bold">Editing</label>
+                        <input type="number" id="editCost" class="form-control" value="0" step="0.01">
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="small fw-bold">Print Cost</label>
+                        <input type="number" id="printCost" class="form-control" value="0" step="0.01">
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button type="button" class="btn btn-secondary btn-sm btn-action" id="resetBtn">Reset</button>
+                    <button type="submit" class="btn btn-success btn-sm btn-action" id="saveBtn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card main-card">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3 header-flex">
+                <h5 class="card-header-title">Expense History</h5>
+
+                <div class="d-flex gap-3">
+                    <div>
+                        <label class="small fw-bold text-muted d-block">Filter Month</label>
+                        <input type="month" id="monthPicker" class="form-control form-control-sm">
+                    </div>
+                    <div>
+                        <label class="small fw-bold text-muted d-block">Total</label>
+                        <div id="monthlyTotalDisplay" class="h5 text-success fw-bold">Rs. 0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Staff</th>
+                        <th>Equip</th>
+                        <th>Shoot</th>
+                        <th>Oil</th>
+                        <th>Edit</th>
+                        <th>Print</th>
+                        <th>Inv.</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="costTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="noData" class="text-center text-muted py-3 d-none">
+                No records found.
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "http://localhost:8080/api/v1/costs";
+    let allCosts = [];
+
+    function getHeaders() {
+        const token = localStorage.getItem("jwt_token") || localStorage.getItem("token");
+        if (!token) { window.location.href = "index.html"; return {}; }
+        return { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+    }
+
+    async function fetchCosts() {
+        try {
+            const res = await fetch(`${API_BASE}/all`, { headers: getHeaders() });
+            const data = await res.json();
+            allCosts = data.content || data;
+            renderCosts();
+        } catch (e) {
+            document.getElementById("noData").classList.remove("d-none");
+            document.getElementById("noData").innerText = "Server connection failed.";
+        }
+    }
+
+    function renderCosts() {
+        const selectedMonth = document.getElementById("monthPicker").value;
+        const tbody = document.getElementById("costTableBody");
+        const noData = document.getElementById("noData");
+        tbody.innerHTML = "";
+        let monthlyTotal = 0;
+
+        let filtered = allCosts;
+        if (selectedMonth) {
+            filtered = allCosts.filter(c => c.date && c.date.substring(0,7) === selectedMonth);
+        }
+
+        if (filtered.length === 0) {
+            noData.classList.remove("d-none");
+        } else {
+            noData.classList.add("d-none");
+            filtered.forEach(c => {
+                const total = Number(c.staffSalary||0) + Number(c.equipmentCost||0) + Number(c.photoshootCost||0) +
+                    Number(c.vehicleOilCost||0) + Number(c.inventoryCost||0) + Number(c.editCost||0) + Number(c.printCost||0);
+                monthlyTotal += total;
+
+                tbody.innerHTML += `
+                <tr>
+                    <td>${c.date ? c.date.substring(0,10) : ""}</td>
+                    <td class="text-truncate" style="max-width: 120px;">${c.description || "-"}</td>
+                    <td>${Number(c.staffSalary||0).toFixed(2)}</td>
+                    <td>${Number(c.equipmentCost||0).toFixed(2)}</td>
+                    <td>${Number(c.photoshootCost||0).toFixed(2)}</td>
+                    <td>${Number(c.vehicleOilCost||0).toFixed(2)}</td>
+                    <td>${Number(c.editCost||0).toFixed(2)}</td>
+                    <td>${Number(c.printCost||0).toFixed(2)}</td>
+                    <td>${Number(c.inventoryCost||0).toFixed(2)}</td>
+                    <td class="fw-bold text-success">Rs.${total.toFixed(2)}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn btn-sm btn-primary" onclick="editCost(${c.costId})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteCost(${c.costId})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+        }
+        document.getElementById("monthlyTotalDisplay").innerText = "Rs. " + monthlyTotal.toLocaleString(undefined,{minimumFractionDigits:2});
+    }
+
+    document.getElementById("monthPicker").addEventListener("change", renderCosts);
+
+    function editCost(id) {
+        const c = allCosts.find(item => item.costId === id);
+        if (!c) return;
+        document.getElementById("costId").value = c.costId;
+        document.getElementById("costDate").value = c.date.substring(0,10);
+        document.getElementById("description").value = c.description || "";
+        document.getElementById("staffSalary").value = c.staffSalary;
+        document.getElementById("equipmentCost").value = c.equipmentCost;
+        document.getElementById("photoshootCost").value = c.photoshootCost;
+        document.getElementById("vehicleOilCost").value = c.vehicleOilCost;
+        document.getElementById("inventoryCost").value = c.inventoryCost;
+        document.getElementById("editCost").value = c.editCost;
+        document.getElementById("printCost").value = c.printCost;
+        document.getElementById("saveBtn").innerText = "Update";
+        document.getElementById("saveBtn").classList.replace("btn-success", "btn-primary");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function deleteCost(id) {
+        if (!confirm("Delete this record?")) return;
+        await fetch(`${API_BASE}/${id}`, { method: "DELETE", headers: getHeaders() });
+        fetchCosts();
+    }
+
+    document.getElementById("costForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const id = document.getElementById("costId").value;
+        const dto = {
+            costId: id ? Number(id) : null,
+            date: document.getElementById("costDate").value,
+            description: document.getElementById("description").value,
+            staffSalary: Number(document.getElementById("staffSalary").value),
+            equipmentCost: Number(document.getElementById("equipmentCost").value),
+            photoshootCost: Number(document.getElementById("photoshootCost").value),
+            vehicleOilCost: Number(document.getElementById("vehicleOilCost").value),
+            inventoryCost: Number(document.getElementById("inventoryCost").value),
+            editCost: Number(document.getElementById("editCost").value),
+            printCost: Number(document.getElementById("printCost").value)
+        };
+        const method = id ? "PUT" : "POST";
+        const endpoint = id ? `${API_BASE}/update` : `${API_BASE}/save`;
+        await fetch(endpoint, { method, headers: getHeaders(), body: JSON.stringify(dto) });
+        resetForm();
+        fetchCosts();
+    });
+
+    function resetForm() {
+        document.getElementById("costForm").reset();
+        document.getElementById("costId").value = "";
+        document.getElementById("saveBtn").innerText = "Save";
+        document.getElementById("saveBtn").classList.replace("btn-primary", "btn-success");
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+    document.addEventListener("DOMContentLoaded", fetchCosts);
+</script>
+</body>
+</html>

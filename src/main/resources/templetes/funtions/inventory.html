@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Pahasara Studio | Inventory & Stock</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+        .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .card-header-custom { font-weight: 600; background-color: #fff; border-bottom: 1px solid #eee; padding: 1.25rem; border-radius: 15px 15px 0 0; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
+        .bg-available { background-color: #d1e7dd; color: #0f5132; }
+        .bg-low { background-color: #fff3cd; color: #664d03; }
+        .bg-out { background-color: #f8d7da; color: #842029; }
+
+        /* Responsive Table Fixes */
+        .table-responsive { border-radius: 0 0 15px 15px; }
+
+        /* Mobile Specific Adjustments */
+        @media (max-width: 576px) {
+            .btn-action { width: 100%; margin-bottom: 8px; }
+            .card-header-custom h5 { font-size: 1.1rem; text-align: center; }
+            h2 { font-size: 1.4rem; text-align: center; }
+            .nav-buttons { text-align: center; }
+        }
+
+        /* Smooth scroll for editing */
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4 mt-md-5">
+    <div class="nav-buttons mb-3">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <h2 class="mb-4 fw-bold">📦 Inventory & Stock Management</h2>
+
+    <div class="card main-card mb-4">
+        <div class="card-header-custom">
+            <h5 class="mb-0" id="formHeader">Add New Stock Entry</h5>
+        </div>
+        <div class="card-body p-3 p-md-4">
+            <form id="inventoryForm">
+                <input type="hidden" id="itemId">
+                <div class="row g-3">
+                    <div class="col-12 col-md-4 col-lg-3">
+                        <label class="form-label small fw-bold">Item Name</label>
+                        <input type="text" id="itemName" class="form-control" placeholder="e.g. Photo Paper" required>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small fw-bold">Quantity</label>
+                        <input type="number" id="quantity" class="form-control" min="0" required>
+                    </div>
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label small fw-bold">Unit</label>
+                        <input type="text" id="unit" class="form-control" placeholder="e.g. pcs, reams">
+                    </div>
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label small fw-bold">Reorder Level</label>
+                        <input type="number" id="reorderLevel" class="form-control" value="5" min="0">
+                    </div>
+
+                    <div class="col-12 col-lg-2 d-flex align-items-end">
+                        <div class="w-100">
+                            <button type="button" class="btn btn-success btn-sm btn-action w-100 mb-2 mb-md-0 d-inline-block" id="saveBtn" onclick="saveItem()">
+                                <i class="fas fa-save me-1"></i> Save
+                            </button>
+                            <button type="button" class="btn btn-warning btn-sm btn-action w-100 mb-2 mb-md-0 d-none d-inline-block" id="updateBtn" onclick="updateItem()">
+                                <i class="fas fa-sync me-1"></i> Update
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="button" class="btn btn-secondary btn-sm btn-action" onclick="clearForm()">
+                            <i class="fas fa-redo me-1"></i> Reset Form
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card main-card">
+        <div class="card-body p-0 p-md-4">
+            <div class="p-3">
+                <h5 class="card-title mb-0">Consumables Stock List</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                    <tr>
+                        <th class="ps-3">ID</th>
+                        <th>Item Name</th>
+                        <th>Qty</th>
+                        <th class="d-none d-sm-table-cell">Unit</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="inventoryTable"></tbody>
+                </table>
+            </div>
+            <div id="noData" class="text-center text-muted py-5 d-none">
+                <i class="fas fa-box-open fa-3x mb-3"></i>
+                <p>No records found in inventory.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const baseUrl = "http://localhost:8080/api/v1/inventory";
+    const TOKEN_KEY = "jwt_token";
+
+    $(document).ready(function () {
+        const token = localStorage.getItem(TOKEN_KEY);
+
+        if (!token || token === "undefined") {
+            window.location.href = "index.html";
+            return;
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            },
+            error: function(xhr) {
+                if (xhr.status === 401 || xhr.status === 403) {
+                    alert("Session expired. Please log in again.");
+                    localStorage.clear();
+                    window.location.href = "index.html";
+                }
+            }
+        });
+
+        loadItems();
+    });
+
+    function loadItems() {
+        $.ajax({
+            url: `${baseUrl}/getAll`,
+            method: "GET",
+            success: function(res) {
+                const tableBody = $("#inventoryTable");
+                tableBody.empty();
+                const items = res.content || res;
+
+                if (items && items.length > 0) {
+                    $("#noData").addClass("d-none");
+                    items.forEach(item => {
+                        let statusClass = 'bg-available';
+                        let statusText = 'In Stock';
+
+                        const qty = item.quantity || 0;
+                        const reorder = item.reorderLevel || 5;
+
+                        if (qty <= 0) {
+                            statusClass = 'bg-out'; statusText = 'Out of Stock';
+                        } else if (qty <= reorder) {
+                            statusClass = 'bg-low'; statusText = 'Low Stock';
+                        }
+
+                        tableBody.append(`
+                            <tr>
+                                <td class="ps-3"><small class="text-muted">#${item.id}</small></td>
+                                <td class="fw-bold text-dark">${item.itemName}</td>
+                                <td><span class="badge bg-light text-dark border px-2">${qty}</span></td>
+                                <td class="d-none d-sm-table-cell">${item.unit || 'pcs'}</td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="selectItem(${item.id}, '${escapeQuotes(item.itemName)}', ${qty}, '${item.unit || ''}', ${reorder})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteItem(${item.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    $("#noData").removeClass("d-none");
+                }
+            }
+        });
+    }
+
+    function saveItem() {
+        const data = getFormData();
+        if (!data.itemName) return alert("Item Name is required.");
+
+        $.ajax({
+            url: `${baseUrl}/save`,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function() {
+                loadItems();
+                clearForm();
+            },
+            error: function(xhr) { alert("Error: " + xhr.responseText); }
+        });
+    }
+
+    function updateItem() {
+        const data = getFormData();
+        const id = $("#itemId").val();
+
+        // Construct the update object (ensure ID is passed for backend matching)
+        const updateData = { id: parseInt(id), ...data };
+
+        $.ajax({
+            url: `${baseUrl}/update`,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(updateData),
+            success: function() {
+                loadItems();
+                clearForm();
+            },
+            error: function(xhr) { alert("Update failed!"); }
+        });
+    }
+
+    function deleteItem(id) {
+        if (confirm("Permanently remove this item from stock?")) {
+            $.ajax({
+                url: `${baseUrl}/delete/${id}`,
+                method: "DELETE",
+                success: function() { loadItems(); }
+            });
+        }
+    }
+
+    function getFormData() {
+        return {
+            itemName: $("#itemName").val(),
+            quantity: parseInt($("#quantity").val()) || 0,
+            unit: $("#unit").val(),
+            reorderLevel: parseInt($("#reorderLevel").val()) || 0
+        };
+    }
+
+    function selectItem(id, name, qty, unit, reorder) {
+        $("#itemId").val(id);
+        $("#itemName").val(name);
+        $("#quantity").val(qty);
+        $("#unit").val(unit);
+        $("#reorderLevel").val(reorder);
+
+        $("#formHeader").html(`<i class="fas fa-edit me-2 text-warning"></i> Editing: ${name}`);
+        $("#saveBtn").addClass("d-none");
+        $("#updateBtn").removeClass("d-none");
+
+        // Focus for accessibility
+        $("#itemName").focus();
+    }
+
+    function clearForm() {
+        $("#inventoryForm")[0].reset();
+        $("#itemId").val("");
+        $("#formHeader").text("Add New Stock Entry");
+        $("#saveBtn").removeClass("d-none");
+        $("#updateBtn").addClass("d-none");
+    }
+
+    function escapeQuotes(str) {
+        return str ? str.replace(/'/g, "\\'").replace(/"/g, "&quot;") : "";
+    }
+</script>
+</body>
+</html>

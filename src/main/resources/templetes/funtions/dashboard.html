@@ -13,16 +13,18 @@
       --sidebar-bg: #1e293b;
       --accent-color: #3b82f6;
       --bg-light: #f8fafc;
+      --indigo-color: #6366f1;
     }
-    body { background: var(--bg-light); font-family: 'Inter', sans-serif; color: #334155; }
+    body { background: var(--bg-light); font-family: 'Inter', sans-serif; color: #334155; margin: 0; overflow-x: hidden; }
 
     /* Sidebar Styles */
     .sidebar {
       height: 100vh; background: var(--sidebar-bg); color: #f8fafc;
       padding: 25px 15px; position: fixed; width: 260px;
-      display: flex; flex-direction: column; z-index: 1000;
+      display: flex; flex-direction: column; z-index: 1050;
+      transition: all 0.3s ease;
     }
-    .brand { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 2rem; padding-left: 10px; }
+    .brand { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 2rem; padding-left: 10px; display: flex; justify-content: space-between; align-items: center; }
     .nav-link {
       color: #94a3b8; padding: 12px 15px; border-radius: 10px;
       margin-bottom: 8px; display: flex; align-items: center;
@@ -36,7 +38,20 @@
     .nav-logout:hover { background: rgba(251, 113, 133, 0.1) !important; color: #f43f5e !important; }
 
     /* Main Content Area */
-    .main-content { margin-left: 260px; padding: 40px; position: relative; }
+    .main-content { margin-left: 260px; padding: 40px; position: relative; min-height: 100vh; transition: all 0.3s ease; }
+
+    /* Mobile Header */
+    .mobile-header {
+      display: none;
+      background: var(--sidebar-bg);
+      color: white;
+      padding: 15px 20px;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1040;
+    }
 
     /* Top Right Alarm/Notification */
     .top-alarm {
@@ -78,8 +93,7 @@
     }
     .btn-action:hover { background: #f1f5f9; border-color: var(--accent-color); }
 
-    #bookingWarning { display: none; margin-bottom: 20px; }
-
+    /* Widgets */
     .floating-container {
       position: fixed; bottom: 20px; right: 20px;
       display: flex; flex-direction: column; gap: 10px; z-index: 2000;
@@ -91,7 +105,7 @@
     .widget-panel {
       position: fixed; bottom: 85px; right: 20px; width: 300px;
       background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      display: none; flex-direction: column; overflow: hidden;
+      display: none; flex-direction: column; overflow: hidden; z-index: 2001;
     }
     .widget-header {
       background: var(--sidebar-bg); color: white; padding: 10px 15px;
@@ -111,16 +125,41 @@
     #notepad-area { width: 100%; height: 250px; border: none; padding: 15px; resize: none; outline: none; font-size: 0.9rem; }
 
     /* Notification Dropdown Style */
-    #notif-panel { padding: 15px; max-height: 200px; overflow-y: auto; font-size: 0.85rem; }
-    .notif-item { border-bottom: 1px solid #f1f5f9; padding: 8px 0; }
-    .notif-item:last-child { border: none; }
+    #notif-panel { padding: 15px; max-height: 250px; overflow-y: auto; font-size: 0.85rem; }
+    .notif-item { border-bottom: 1px solid #f1f5f9; padding: 10px 0; }
+
+    /* --- RESPONSIVE MEDIA QUERIES --- */
+    @media (max-width: 991px) {
+      .sidebar { left: -260px; }
+      .sidebar.active { left: 0; }
+      .main-content { margin-left: 0; padding: 20px; }
+      .mobile-header { display: flex; }
+      .top-alarm { position: static; width: 40px; height: 40px; }
+    }
+
+    @media (max-width: 576px) {
+      .widget-panel { width: calc(100% - 40px); right: 20px; }
+      .stat-card { padding: 15px; }
+      h2 { font-size: 1.5rem; }
+    }
   </style>
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="brand"><i class="fas fa-camera-retro me-2"></i>Pahasara</div>
-  <nav>
+<div class="mobile-header">
+  <div class="fw-bold fs-4" onclick="toggleSidebar()"><i class="fas fa-bars me-2"></i> Pahasara</div>
+  <div class="top-alarm m-0" onclick="toggleWidget('notifications')">
+    <i class="fas fa-bell"></i>
+    <div class="badge-dot" id="notifBadge"></div>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <span><i class="fas fa-camera-retro me-2"></i>Pahasara</span>
+    <i class="fas fa-times d-lg-none cursor-pointer" onclick="toggleSidebar()"></i>
+  </div>
+  <nav style="overflow-y: auto; flex: 1;">
     <a href="dashboard.html" class="nav-link active"><i class="fas fa-th-large"></i> Dashboard</a>
     <a href="user.html" class="nav-link"><i class="fas fa-users"></i> User</a>
     <a href="client.html" class="nav-link"><i class="fas fa-user-friends"></i> Client</a>
@@ -129,54 +168,50 @@
     <a href="equipment.html" class="nav-link"><i class="fas fa-toolbox"></i> Equipment</a>
     <a href="inventory.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> Inventory</a>
     <a href="photo-frame.html" class="nav-link"><i class="fas fa-image"></i> Photo Frame</a>
-    <a href="cost-management.html" class="nav-link"><i class="fas fa-coins"></i> Cost Management</a>
+    <a href="cost-management.html" class="nav-link"><i class="fas fa-coins"></i> Shoot Cost Management</a>
     <a href="#" onclick="logout()" class="nav-link nav-logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
   </nav>
 </aside>
 
 <main class="main-content">
-  <div class="top-alarm" onclick="toggleWidget('notifications')">
+  <div class="top-alarm d-none d-lg-flex" onclick="toggleWidget('notifications')">
     <i class="fas fa-bell"></i>
-    <div class="badge-dot" id="notifBadge"></div>
+    <div class="badge-dot" id="notifBadgeDesktop"></div>
   </div>
 
-  <div class="d-flex justify-content-between align-items-end mb-2">
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-end mb-4 gap-2">
     <div>
-      <h4 class="text-muted mb-1">Overview</h4>
-      <h2 id="welcomeText" class="fw-bold">Welcome Back!</h2>
-      <div id="bookingWarning" class="alert alert-warning"></div>
+      <h4 class="text-muted mb-1 small">Welcome</h4>
+      <h2 id="welcomeText" class="fw-bold mb-0">Welcome Back!</h2>
     </div>
-    <div class="text-end">
-      <div class="text-muted small" id="currentDate" style="margin-right: 60px;"></div>
-    </div>
+    <div class="text-muted small" id="currentDate"></div>
   </div>
 
-  <div class="row g-4 mb-5">
-    <div class="col-md">
+  <div id="bookingWarning" class="alert alert-warning" style="display:none; border-radius: 12px;"></div>
+
+  <div class="row g-3 g-md-4 mb-5">
+    <div class="col-6 col-md-3">
       <div class="stat-card">
         <div class="icon-box bg-blue-light"><i class="fas fa-users"></i></div>
         <div class="text-muted small fw-medium">Total Clients</div>
         <h3 class="fw-bold mb-0" id="clientCount"><span class="spinner-border spinner-border-sm"></span></h3>
       </div>
     </div>
-
-    <div class="col-md">
+    <div class="col-6 col-md-3">
       <div class="stat-card">
         <div class="icon-box bg-green-light"><i class="fas fa-calendar-check"></i></div>
         <div class="text-muted small fw-medium">Active Bookings</div>
         <h3 class="fw-bold mb-0" id="bookingCount"><span class="spinner-border spinner-border-sm"></span></h3>
       </div>
     </div>
-
-    <div class="col-md">
+    <div class="col-6 col-md-3">
       <div class="stat-card">
         <div class="icon-box bg-purple-light"><i class="fas fa-hand-holding-dollar"></i></div>
         <div class="text-muted small fw-medium">Cost Entries</div>
         <h3 class="fw-bold mb-0" id="costCount"><span class="spinner-border spinner-border-sm"></span></h3>
       </div>
     </div>
-
-    <div class="col-md">
+    <div class="col-6 col-md-3">
       <div class="stat-card">
         <div class="icon-box bg-purple-dark"><i class="fas fa-user-tag"></i></div>
         <div class="text-muted small fw-medium">User Count</div>
@@ -185,15 +220,16 @@
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm p-4 rounded-4 mb-4">
+  <div class="card border-0 shadow-sm p-3 p-md-4 rounded-4 mb-4">
     <h5 class="fw-bold mb-4">Quick Actions</h5>
-    <div class="row row-cols-1 row-cols-md-3 g-3">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
       <div class="col"><a href="photographer.html" class="btn-action"><i class="fas fa-user-plus me-2 text-info"></i> Photographer</a></div>
       <div class="col"><a href="booking.html" class="btn-action"><i class="fas fa-calendar-plus me-2 text-primary"></i> Booking</a></div>
       <div class="col"><a href="indoor-booking.html" class="btn-action"><i class="fas fa-map-marker-alt me-2 text-purple"></i> Indoor Booking</a></div>
       <div class="col"><a href="album-management.html" class="btn-action"><i class="fas fa-images me-2 text-warning"></i> Album Management</a></div>
       <div class="col"><a href="invoice.html" class="btn-action"><i class="fas fa-file-invoice-dollar me-2 text-danger"></i> Invoice</a></div>
       <div class="col"><a href="email.html" class="btn-action"><i class="fas fa-envelope me-2 text-success"></i> Email</a></div>
+      <div class="col-md-12 col-lg-4"><a href="report.html" class="btn-action"><i class="fas fa-chart-line me-2 text-indigo"></i> Show Report</a></div>
     </div>
   </div>
 </main>
@@ -203,7 +239,7 @@
   <button class="widget-btn bg-warning" onclick="toggleWidget('notepad')"><i class="fas fa-sticky-note"></i></button>
 </div>
 
-<div id="notifications" class="widget-panel" style="top: 75px; right: 40px; bottom: auto;">
+<div id="notifications" class="widget-panel">
   <div class="widget-header"><span>Alerts</span><i class="fas fa-times cursor-pointer" onclick="toggleWidget('notifications')"></i></div>
   <div id="notif-panel">
     <div class="text-muted text-center py-3">No new alerts</div>
@@ -215,11 +251,10 @@
   <input type="text" id="calc-display" disabled value="0">
   <div class="calc-grid">
     <button onclick="clearCalc()" class="btn-operator">C</button>
-    <button onclick="appendCalc('/')">÷</button>
-    <button onclick="appendCalc('*')">×</button>
+    <button onclick="appendCalc('/')">/</button><button onclick="appendCalc('*')">×</button>
     <button onclick="backspaceCalc()"><i class="fas fa-backspace"></i></button>
     <button onclick="appendCalc('7')">7</button><button onclick="appendCalc('8')">8</button><button onclick="appendCalc('9')">9</button>
-    <button onclick="appendCalc('-')">−</button>
+    <button onclick="appendCalc('-')">-</button>
     <button onclick="appendCalc('4')">4</button><button onclick="appendCalc('5')">5</button><button onclick="appendCalc('6')">6</button>
     <button onclick="appendCalc('+')">+</button>
     <button onclick="appendCalc('1')">1</button><button onclick="appendCalc('2')">2</button><button onclick="appendCalc('3')">3</button>
@@ -234,39 +269,35 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const role = localStorage.getItem("userRole");
-    const email = localStorage.getItem("userEmail");
-    if (!role) { window.location.href = "auth.html"; return; }
-
-    document.getElementById("welcomeText").innerText = `Hello, ${email ? email.split('@')[0] : 'User'}!`;
-    document.getElementById("currentDate").innerText = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-
-    document.getElementById("notepad-area").value = localStorage.getItem("pahasara_notes") || "";
-    document.getElementById("notepad-area").addEventListener("input", e => localStorage.setItem("pahasara_notes", e.target.value));
-
-    loadStats();
-  });
-
-  function toggleWidget(id) {
-    const el = document.getElementById(id);
-    const isVisible = (el.style.display === 'flex');
-    // Close other panels if opening a new one
-    document.querySelectorAll('.widget-panel').forEach(p => p.style.display = 'none');
-    el.style.display = isVisible ? 'none' : 'flex';
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
   }
 
-  let calcInput = "";
-  function appendCalc(val) { calcInput += val; document.getElementById("calc-display").value = calcInput; }
-  function clearCalc() { calcInput = ""; document.getElementById("calc-display").value = "0"; }
-  function backspaceCalc() { calcInput = calcInput.slice(0,-1); document.getElementById("calc-display").value = calcInput||"0"; }
-  function calculateResult() { try { calcInput = eval(calcInput).toString(); document.getElementById("calc-display").value = calcInput; } catch { document.getElementById("calc-display").value="Error"; calcInput=""; } }
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem("jwt_token") || localStorage.getItem("jwtToken") || localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "index.html";
+      return;
+    }
 
-  async function loadStats() {
-    const token = localStorage.getItem("jwtToken") || localStorage.getItem("token") || localStorage.getItem("authToken");
-    const headers = { 'Content-Type': 'application/json' };
-    if(token) headers['Authorization'] = `Bearer ${token}`;
+    const email = localStorage.getItem("userEmail") || "User";
+    document.getElementById("welcomeText").innerText = `Hello, ${email.split('@')[0]}!`;
 
+    document.getElementById("currentDate").innerText = new Date().toLocaleDateString('en-US', {
+      weekday:'long', year:'numeric', month:'long', day:'numeric'
+    });
+
+    loadStats(token);
+
+    const notepad = document.getElementById('notepad-area');
+    notepad.value = localStorage.getItem('pahasara_notes') || "";
+    notepad.addEventListener('input', () => {
+      localStorage.setItem('pahasara_notes', notepad.value);
+    });
+  });
+
+  async function loadStats(token) {
+    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
     const endpoints = {
       clientCount: 'http://localhost:8080/api/v1/clients/getAll',
       bookingCount: 'http://localhost:8080/api/v1/bookings/getAll',
@@ -276,59 +307,67 @@
 
     for(const [id, url] of Object.entries(endpoints)) {
       try {
-        const res = await fetch(url, { method:'GET', headers: headers });
-        if(!res.ok) {
-          document.getElementById(id).innerHTML = `<span class="text-danger" style="font-size:0.6em">404</span>`;
-          continue;
-        }
+        const res = await fetch(url, { method: 'GET', headers: headers });
         const data = await res.json();
-        let listData = Array.isArray(data) ? data : (data.content || data.data || []);
-        document.getElementById(id).innerText = listData.length;
-        if(id === 'bookingCount') checkUpcomingBookings(listData);
-      } catch(err) {
+        let list = Array.isArray(data) ? data : (data.content || data.data || []);
+        document.getElementById(id).innerText = list.length;
+        if (id === 'bookingCount') checkUpcomingBookings(list);
+      } catch (err) {
         document.getElementById(id).innerText = "0";
       }
     }
   }
 
   function checkUpcomingBookings(bookings) {
-    if(!Array.isArray(bookings) || bookings.length===0) return;
+    const notifPanel = document.getElementById('notif-panel');
+    const badge = document.getElementById('notifBadge');
+    const badgeD = document.getElementById('notifBadgeDesktop');
+    const warningBox = document.getElementById('bookingWarning');
+
     const today = new Date();
-    const warningDays = 3;
+    today.setHours(0,0,0,0);
     const upcoming = bookings.filter(b => {
-      if(!b.bookingDate) return false;
-      const bd = new Date(b.bookingDate);
-      const diffDays = (bd - today)/(1000*60*60*24);
-      return diffDays >=0 && diffDays <= warningDays;
+      const d = new Date(b.bookingDate || b.date);
+      const diff = Math.ceil((d - today) / (86400000));
+      return diff >= 0 && diff <= 3;
     });
 
-    const warningDiv = document.getElementById("bookingWarning");
-    const notifPanel = document.getElementById("notif-panel");
-    const notifBadge = document.getElementById("notifBadge");
-
-    if(upcoming.length > 0){
-      warningDiv.style.display = 'block';
-      warningDiv.innerHTML = `<i class="fas fa-bell me-2"></i> You have ${upcoming.length} upcoming booking(s).`;
-
-      // Update the Alarm panel content
-      notifBadge.style.display = 'block';
+    if (upcoming.length > 0) {
+      badge.style.display = badgeD.style.display = 'block';
+      warningBox.style.display = 'block';
+      warningBox.innerHTML = `<strong>Reminder:</strong> ${upcoming.length} upcoming bookings soon.`;
       notifPanel.innerHTML = upcoming.map(u => `
         <div class="notif-item">
-          <strong>Booking:</strong> ${u.clientName || 'ID: '+u.id}<br>
-          <small class="text-primary">${u.bookingDate}</small>
+          <div class="fw-bold text-primary">Booking: ${u.clientId || u.id}</div>
+          <div class="text-muted small">${new Date(u.bookingDate || u.date).toLocaleDateString()}</div>
         </div>
       `).join('');
-    } else {
-      warningDiv.style.display = 'none';
-      notifBadge.style.display = 'none';
     }
   }
 
-  function logout() {
-    localStorage.clear();
-    window.location.href = "logout.html";
+  function toggleWidget(id) {
+    const panels = ['calculator', 'notepad', 'notifications'];
+    panels.forEach(p => {
+      const el = document.getElementById(p);
+      if (p === id) {
+        const isHidden = window.getComputedStyle(el).display === 'none';
+        el.style.display = isHidden ? (p === 'calculator' ? 'block' : 'flex') : 'none';
+      } else { el.style.display = 'none'; }
+    });
+  }
+
+  let calcInput = "";
+  function appendCalc(v) { calcInput += v; document.getElementById('calc-display').value = calcInput; }
+  function clearCalc() { calcInput = ""; document.getElementById('calc-display').value = "0"; }
+  function backspaceCalc() { calcInput = calcInput.slice(0, -1); document.getElementById('calc-display').value = calcInput || "0"; }
+  function calculateResult() { try { calcInput = eval(calcInput).toString(); document.getElementById('calc-display').value = calcInput; } catch { document.getElementById('calc-display').value = "Error"; calcInput = ""; } }
+
+  async function logout() {
+    if (confirm("Logout?")) {
+      localStorage.clear();
+      window.location.href = "logout.html";
+    }
   }
 </script>
-
 </body>
 </html>

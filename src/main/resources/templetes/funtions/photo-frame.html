@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pahasara Studio | Frame Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom:50px;}
+        .main-card { border:none; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.08); margin-bottom:30px;}
+        .stat-card { border:none; border-radius:15px; color: white; transition: 0.3s; position: relative; overflow: hidden; }
+        .bg-revenue { background: linear-gradient(45deg, #198754, #20c997); }
+        .bg-profit { background: linear-gradient(45deg, #0d6efd, #0dcaf0); }
+        .bg-inventory { background: linear-gradient(45deg, #6c757d, #adb5bd); }
+        .btn-action { width:100%; max-width: 120px;}
+        .badge-material { padding:5px 12px; border-radius:20px; font-size:0.85rem; font-weight:600; background-color:#cfe2ff; color:#084298;}
+        .price-text { font-weight:700; color:#198754;}
+        .cost-text { color: #6c757d; font-size: 0.9rem; }
+        .stock-warning { color: #dc3545; font-weight: bold; animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.5; } }
+        .profit-text { color: #0d6efd; font-weight: 600; }
+        .filter-box { background: white; padding: 10px 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        /* --- RESPONSIVE TABLE-TO-CARD TRANSFORMATION --- */
+        @media (max-width: 768px) {
+            .table-responsive { border: none; }
+            thead { display: none; } /* Hide headers on mobile */
+
+            .table tbody tr {
+                display: block;
+                margin-bottom: 1rem;
+                background: #fff;
+                border: 1px solid #dee2e6;
+                border-radius: 12px;
+                padding: 10px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            }
+
+            .table tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: none;
+                padding: 6px 10px;
+                text-align: right;
+            }
+
+            .table tbody td:not(:last-child) { border-bottom: 1px solid #eee; }
+
+            .table tbody td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.7rem;
+                color: #6c757d;
+                float: left;
+            }
+
+            .btn-action { max-width: 48%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4 mt-md-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <a href="dashboard.html" class="btn btn-outline-primary btn-sm mb-2 shadow-sm"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+            <h2 class="fw-bold">🛒 Frame Store</h2>
+        </div>
+        <div class="filter-box w-100 w-md-auto">
+            <label class="form-label small fw-bold mb-1 text-muted"><i class="fas fa-calendar-alt me-1"></i> Analysis Month</label>
+            <input type="month" id="monthPicker" class="form-control form-control-sm">
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card stat-card bg-revenue p-3 shadow-sm">
+                <small>Monthly Revenue</small>
+                <h3 id="monthlyRevenue" class="fw-bold">Rs. 0.00</h3>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card stat-card bg-profit p-3 shadow-sm">
+                <small>Monthly Profit</small>
+                <h3 id="monthlyProfit" class="fw-bold">Rs. 0.00</h3>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card stat-card bg-inventory p-3 shadow-sm">
+                <small>Total Stock Value (Cost)</small>
+                <h3 id="stockValue" class="fw-bold">Rs. 0.00</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card main-card">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4 fw-bold"><i class="fas fa-box-open me-2 text-success"></i>Stock Entry</h5>
+                    <form id="frameForm">
+                        <input type="hidden" id="frameId">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-bold">Frame Name</label>
+                                <input type="text" id="frameName" class="form-control" placeholder="e.g. Royal Gold" required>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="form-label small fw-bold">Material</label>
+                                <select id="material" class="form-select">
+                                    <option value="Wood">Wood</option>
+                                    <option value="Metal">Metal</option>
+                                    <option value="Plastic">Plastic</option>
+                                    <option value="Glass">Glass</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="form-label small fw-bold">Size</label>
+                                <input type="text" id="size" class="form-control" placeholder="e.g. 8x10" required>
+                            </div>
+                            <div class="col-6 col-md-6">
+                                <label class="form-label small fw-bold">Unit Cost (LKR)</label>
+                                <input type="number" step="0.01" id="unitPrice" class="form-control" placeholder="0.00" required>
+                                <div id="sellingPreview" class="form-text text-success fw-bold mt-1 small">Selling Price: Rs. 0.00</div>
+                            </div>
+                            <div class="col-6 col-md-6">
+                                <label class="form-label small fw-bold">Quantity</label>
+                                <input type="number" id="qtyOnHand" class="form-control" placeholder="0" required>
+                            </div>
+                        </div>
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-sm btn-action shadow-sm" id="saveBtn">Save</button>
+                            <button type="button" class="btn btn-secondary btn-sm btn-action shadow-sm" id="resetBtn">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card main-card border-warning">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-warning fw-bold mb-4"><i class="fas fa-cash-register me-2"></i>Quick Sell</h5>
+                    <form id="sellForm" class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Select Frame</label>
+                            <select id="sellFrameSelect" class="form-select" required></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Quantity</label>
+                            <input type="number" id="sellQty" class="form-control" min="1" value="1" required>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <button type="submit" id="processSaleBtn" class="btn btn-warning w-100 fw-bold shadow-sm">PROCESS SALE</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card main-card">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">📦 Inventory List</h5>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-dark">
+                    <tr><th>ID</th><th>Description</th><th>Material</th><th>Size</th><th>Cost</th><th>Selling</th><th>Qty</th><th class="text-center">Actions</th></tr>
+                    </thead>
+                    <tbody id="frameTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card main-card">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">📝 Monthly Sales Logs</h5>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-secondary">
+                    <tr><th>#</th><th>Frame</th><th>Size</th><th>Qty</th><th>Revenue</th><th>Profit</th><th>Time</th></tr>
+                    </thead>
+                    <tbody id="sellingHistoryBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "http://localhost:8080/api/v1/photoframe";
+    const SALES_API = "http://localhost:8080/api/v1/sales";
+    const MARKUP = 1.5;
+    let framesList = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const d = new Date();
+        document.getElementById("monthPicker").value = d.toISOString().substring(0, 7);
+        fetchFrames();
+    });
+
+    document.getElementById("monthPicker").addEventListener("change", renderSellingHistory);
+
+    const formatRs = (val) => "Rs. " + parseFloat(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+
+    document.getElementById("unitPrice").addEventListener("input", function() {
+        const cost = parseFloat(this.value) || 0;
+        document.getElementById("sellingPreview").innerText = `Selling Price: ${formatRs(cost * MARKUP)}`;
+    });
+
+    function getAuthHeaders() {
+        const token = localStorage.getItem("jwt_token") || localStorage.getItem("token") || localStorage.getItem("jwtToken");
+        return { "Content-Type":"application/json", "Authorization": `Bearer ${token}` };
+    }
+
+    async function handleResponse(res){
+        if(res.status === 401 || res.status === 403){ window.location.href = "index.html"; return null; }
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : {};
+        if(!res.ok) throw new Error(data.message || "Action failed");
+        return data;
+    }
+
+    async function fetchFrames(){
+        try{
+            const res = await fetch(API_BASE, { headers: getAuthHeaders() });
+            const dataObj = await handleResponse(res);
+            framesList = dataObj.content || (Array.isArray(dataObj) ? dataObj : []);
+
+            const tbody = document.getElementById("frameTableBody");
+            const sellSelect = document.getElementById("sellFrameSelect");
+            let totalStockValue = 0;
+
+            tbody.innerHTML = "";
+            sellSelect.innerHTML = "<option value=''>-- Select Stock --</option>";
+
+            framesList.forEach(f => {
+                const cost = parseFloat(f.unitPrice);
+                totalStockValue += (cost * f.qtyOnHand);
+
+                tbody.innerHTML += `<tr>
+                    <td data-label="ID">#${f.id}</td>
+                    <td data-label="Description"><strong>${f.frameName}</strong></td>
+                    <td data-label="Material"><span class="badge-material">${f.material}</span></td>
+                    <td data-label="Size">${f.size}</td>
+                    <td data-label="Cost" class="cost-text">${formatRs(cost)}</td>
+                    <td data-label="Selling" class="price-text">${formatRs(cost * MARKUP)}</td>
+                    <td data-label="Qty" class="${f.qtyOnHand < 5 ? 'stock-warning' : ''}">${f.qtyOnHand}</td>
+                    <td data-label="Actions" class="text-center">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editFrame(${f.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteFrame(${f.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+
+                if(f.qtyOnHand > 0) sellSelect.innerHTML += `<option value="${f.id}">${f.frameName} [${f.size}]</option>`;
+            });
+
+            document.getElementById("stockValue").innerText = formatRs(totalStockValue);
+            renderSellingHistory();
+        }catch(e){ console.error(e); }
+    }
+
+    async function renderSellingHistory() {
+        try {
+            const res = await fetch(SALES_API, { headers: getAuthHeaders() });
+            const history = await handleResponse(res);
+            const tbody = document.getElementById("sellingHistoryBody");
+            const selectedVal = document.getElementById("monthPicker").value;
+
+            let mRev = 0, mProf = 0;
+            tbody.innerHTML = "";
+
+            const filtered = history.filter(s => s.saleTime && s.saleTime.startsWith(selectedVal));
+            filtered.sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime));
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">No records found for ${selectedVal}</td></tr>`;
+            } else {
+                filtered.forEach((s, i) => {
+                    const rev = parseFloat(s.total || 0);
+                    const prof = rev - (rev / MARKUP);
+                    mRev += rev; mProf += prof;
+
+                    tbody.innerHTML += `<tr>
+                        <td data-label="#">${i+1}</td>
+                        <td data-label="Frame">${s.frameName}</td>
+                        <td data-label="Size">${s.size}</td>
+                        <td data-label="Qty">${s.qty}</td>
+                        <td data-label="Revenue" class="price-text">${formatRs(rev)}</td>
+                        <td data-label="Profit" class="profit-text">+ ${formatRs(prof)}</td>
+                        <td data-label="Time">${s.saleTime.substring(0, 16).replace('T', ' ')}</td>
+                    </tr>`;
+                });
+            }
+            document.getElementById("monthlyRevenue").innerText = formatRs(mRev);
+            document.getElementById("monthlyProfit").innerText = formatRs(mProf);
+        } catch(e) { console.error(e); }
+    }
+
+    document.getElementById("sellForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const btn = document.getElementById("processSaleBtn");
+        const frameId = document.getElementById("sellFrameSelect").value;
+        const sellQty = parseInt(document.getElementById("sellQty").value);
+        const frame = framesList.find(f => f.id == frameId);
+
+        if(!frame || frame.qtyOnHand < sellQty) return alert("Insufficient stock!");
+
+        btn.disabled = true;
+        btn.innerText = "WAIT...";
+
+        const localTime = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+
+        try {
+            await fetch(`${API_BASE}/${frameId}`, {
+                method: "PUT", headers: getAuthHeaders(),
+                body: JSON.stringify({...frame, qtyOnHand: frame.qtyOnHand - sellQty})
+            });
+
+            await fetch(SALES_API, {
+                method: "POST", headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    frameName: frame.frameName, size: frame.size,
+                    qty: sellQty, total: (sellQty * frame.unitPrice * MARKUP),
+                    saleTime: localTime
+                })
+            });
+
+            alert("Sale Recorded!");
+            document.getElementById("sellForm").reset();
+            fetchFrames();
+        } catch(e) { alert(e.message); }
+        finally { btn.disabled = false; btn.innerText = "PROCESS SALE"; }
+    });
+
+    document.getElementById("frameForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const id = document.getElementById("frameId").value;
+        const dto = {
+            frameName: document.getElementById("frameName").value,
+            material: document.getElementById("material").value,
+            size: document.getElementById("size").value,
+            unitPrice: parseFloat(document.getElementById("unitPrice").value),
+            qtyOnHand: parseInt(document.getElementById("qtyOnHand").value)
+        };
+        try {
+            const url = id ? `${API_BASE}/${id}` : API_BASE;
+            if(id) dto.id = id;
+            await fetch(url, { method: id ? "PUT" : "POST", headers: getAuthHeaders(), body: JSON.stringify(dto) });
+            resetForm(); fetchFrames();
+        } catch(e) { alert(e.message); }
+    });
+
+    function editFrame(id) {
+        const f = framesList.find(i => i.id == id);
+        document.getElementById("frameId").value = f.id;
+        document.getElementById("frameName").value = f.frameName;
+        document.getElementById("material").value = f.material;
+        document.getElementById("size").value = f.size;
+        document.getElementById("unitPrice").value = f.unitPrice;
+        document.getElementById("qtyOnHand").value = f.qtyOnHand;
+        document.getElementById("saveBtn").innerText = "Update";
+        document.getElementById("unitPrice").dispatchEvent(new Event('input'));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function deleteFrame(id) {
+        if(confirm("Confirm deletion?")) {
+            await fetch(`${API_BASE}/${id}`, { method: "DELETE", headers: getAuthHeaders() });
+            fetchFrames();
+        }
+    }
+
+    function resetForm() {
+        document.getElementById("frameId").value = "";
+        document.getElementById("frameForm").reset();
+        document.getElementById("saveBtn").innerText = "Save";
+        document.getElementById("sellingPreview").innerText = "Selling Price: Rs. 0.00";
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+</script>
+</body>
+</html>

@@ -4,22 +4,50 @@ const SERVICE_API = "http://localhost:8080/api/v1/services";
 let bookingList = [];
 let serviceList = [];
 
+// 1. Global AJAX Configuration for JWT
+$.ajaxSetup({
+    beforeSend: function(xhr) {
+        const token = localStorage.getItem("jwt_token");
+        if (token) {
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        }
+    },
+    error: function(jqXHR) {
+        if (jqXHR.status === 401 || jqXHR.status === 403) {
+            alert("Session expired. Please login again.");
+            window.location.href = "index.html";
+        }
+    }
+});
+
 $(document).ready(function () {
-    loadServices().then(() => loadBookings());
+    if (!localStorage.getItem("jwt_token")) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Sequence: Load services FIRST, then bookings
+    initPage();
 
     $("#resetBtn").click(resetForm);
-
     $("#bookingForm").submit(function (e) {
         e.preventDefault();
         saveBooking();
     });
 });
 
+async function initPage() {
+    await loadServices(); // Wait for services to finish
+    loadBookings();       // Now load bookings so the names can be mapped
+}
+
+// ------------------ LOAD SERVICES ------------------
 async function loadServices() {
     try {
         const response = await $.get(`${SERVICE_API}/getAll`);
-        // FIXED: Access .content from the wrapper
-        serviceList = response.content || [];
+        // Handle both response formats (wrapped in 'content' or direct array)
+        serviceList = response.content || response || [];
+
         let options = '<option value="" selected disabled>Select a Package</option>';
         serviceList.forEach(s => {
             if (s.status === 'ACTIVE') {
@@ -27,18 +55,19 @@ async function loadServices() {
             }
         });
         $("#serviceId").html(options);
+        console.log("Services loaded:", serviceList.length);
     } catch (err) {
         console.error("Failed to load services:", err);
     }
 }
 
+// ------------------ LOAD BOOKINGS ------------------
 function loadBookings() {
     $.ajax({
         url: `${BOOKING_API}/getAll`,
         method: "GET",
         success: function (response) {
-            // FIXED: Your backend sends data inside the 'content' key
-            bookingList = response.content || [];
+            bookingList = response.content || response || [];
             let rows = "";
 
             if (!bookingList || bookingList.length === 0) {
@@ -50,38 +79,36 @@ function loadBookings() {
             }
 
             bookingList.forEach(b => {
-                let statusClass = "badge-status";
-                if (b.status === "CONFIRMED") statusClass += " status-confirmed";
-                else if (b.status === "CANCELLED") statusClass += " status-cancelled";
-                else statusClass += " status-pending";
+                let statusClass = "badge bg-opacity-10 ";
+                if (b.status === "CONFIRMED") statusClass += "bg-success text-success";
+                else if (b.status === "CANCELLED") statusClass += "bg-danger text-danger";
+                else statusClass += "bg-warning text-warning";
 
-                // Mapping service name from the list
-                const serviceOption = serviceList.find(s => s.id == b.serviceId);
-                const serviceText = serviceOption ? serviceOption.serviceName : (b.serviceName || '<span class="text-danger small">Unknown</span>');
+                // CRITICAL FIX: Find service name from the loaded serviceList
+                const service = serviceList.find(s => String(s.id) === String(b.serviceId));
+                const serviceName = service ? service.serviceName : `<span class="text-danger">ID: ${b.serviceId}</span>`;
 
                 rows += `
                 <tr>
                     <td>#${b.id}</td>
                     <td>${b.bookingDate}</td>
-                    <td>${serviceText}</td>
+                    <td class="fw-bold text-primary">${serviceName}</td>
                     <td>${b.location}</td>
-                    <td><span class="${statusClass}">${b.status}</span></td>
+                    <td><span class="${statusClass} px-2 py-1 rounded small">${b.status}</span></td>
                     <td>${b.clientEmail}</td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editBooking(${b.id})">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking(${b.id})">Delete</button>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editBooking(${b.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBooking(${b.id})"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>`;
             });
 
             $("#bookingTableBody").html(rows);
-        },
-        error: function (err) {
-            console.error("Failed to load bookings:", err);
         }
     });
 }
 
+// ------------------ SAVE/UPDATE ------------------
 function saveBooking() {
     const id = $("#bookingId").val();
     const dto = {
@@ -90,7 +117,7 @@ function saveBooking() {
         location: $("#location").val(),
         status: $("#status").val(),
         clientEmail: $("#clientEmail").val(),
-        serviceId: $("#serviceId").val()
+        serviceId: $("#serviceId").val() // Selected from dropdown
     };
 
     const method = id ? "PUT" : "POST";
@@ -102,35 +129,29 @@ function saveBooking() {
         contentType: "application/json",
         data: JSON.stringify(dto),
         success: function (res) {
-            // FIXED: Backend uses 'code' == '00' for success (VarList.RSP_SUCCESS)
-            if (res.code === "00") {
-                alert(res.message || "Operation Successful");
+            if (res.code === "00" || res.status === 200) {
+                alert("Success!");
                 resetForm();
                 loadBookings();
             } else {
                 alert("Error: " + res.message);
             }
         },
-        error: function (err) {
-            console.error("Failed to save booking:", err);
-            alert("Failed to save. Check if the Client Email exists in the system.");
+        error: function(xhr) {
+            alert("Failed: " + (xhr.responseJSON?.message || "Check client email exists"));
         }
     });
 }
 
+// ------------------ DELETE/EDIT/RESET ------------------
 function deleteBooking(id) {
-    if (!confirm("Are you sure to delete?")) return;
-
+    if (!confirm("Delete this booking?")) return;
     $.ajax({
         url: `${BOOKING_API}/delete/${id}`,
         method: "DELETE",
-        success: function (res) {
-            if (res.code === "00") {
-                alert("Deleted successfully");
-                loadBookings();
-            } else {
-                alert("Failed to delete: " + res.message);
-            }
+        success: function () {
+            alert("Deleted");
+            loadBookings();
         }
     });
 }
@@ -144,7 +165,7 @@ function editBooking(id) {
     $("#location").val(b.location);
     $("#status").val(b.status);
     $("#clientEmail").val(b.clientEmail);
-    $("#serviceId").val(b.serviceId);
+    $("#serviceId").val(b.serviceId); // Dropdown will auto-select the matching ID
 
     $("#saveBtn").text("Update").removeClass("btn-success").addClass("btn-primary");
     window.scrollTo({ top: 0, behavior: 'smooth' });

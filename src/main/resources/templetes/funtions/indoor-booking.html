@@ -7,25 +7,70 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
+        /* --- Base Styles --- */
         body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
         .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
         .card-header-custom { font-weight: 600; background-color: #fff; border-bottom: 1px solid #eee; padding: 1.25rem; border-radius: 15px 15px 0 0; }
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
         .bg-booked { background-color: #d1e7dd; color: #0f5132; }
         .bg-completed { background-color: #cff4fc; color: #055160; }
         .bg-cancelled { background-color: #f8d7da; color: #842029; }
         .studio-label { font-size: 1.5rem; color: #0d6efd; font-weight: bold; }
         .btn-action { min-width: 140px; }
         .action-group { display: flex; gap: 5px; justify-content: center; }
+        .income-card { background: linear-gradient(45deg, #0d6efd, #0dcaf0); color: white; }
+
+        /* --- Custom Responsive Breakpoints --- */
+
+        /* Laptop (Max 1024px) */
+        @media (max-width: 1024px) {
+            .container { padding: 0 3%; }
+        }
+
+        /* Tablet (Max 768px) */
+        @media (max-width: 768px) {
+            .d-flex.justify-content-between.align-items-center.mb-4 {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 15px;
+            }
+            .btn-action { width: 100%; margin-bottom: 8px; }
+            .action-group { flex-direction: column; width: 100%; }
+            .action-group .btn { width: 100%; }
+            .studio-label { font-size: 1.2rem; }
+        }
+
+        /* Mobile Large (Max 425px) */
+        @media (max-width: 425px) {
+            h2 { font-size: 1.4rem; }
+            .main-card { margin-bottom: 20px; }
+            .income-card h2 { font-size: 1.5rem; }
+            .table { font-size: 0.8rem; }
+            .card-header-custom { padding: 1rem; }
+            #invoiceBtn { width: 100%; margin-top: 10px; }
+            .card-header-custom.d-flex { flex-direction: column; }
+        }
+
+        /* Mobile Small (Max 320px) */
+        @media (max-width: 320px) {
+            h2 { font-size: 1.2rem; }
+            .status-badge { font-size: 0.7rem; padding: 4px 8px; }
+        }
+
+        /* Ensure Table is scrollable on small screens */
+        .table-responsive {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            background: white;
+        }
     </style>
 </head>
 <body>
-<div class="container mt-5">
+<div class="container mt-4 mt-md-5">
     <div id="alertPlaceholder"></div>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -67,11 +112,11 @@
                         <label class="form-label small fw-bold">Booking Date</label>
                         <input type="date" id="bookingDate" class="form-control" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 col-6">
                         <label class="form-label small fw-bold">Start Time</label>
                         <input type="time" id="startTime" class="form-control" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 col-6">
                         <label class="form-label small fw-bold">End Time</label>
                         <input type="time" id="endTime" class="form-control" required>
                     </div>
@@ -99,7 +144,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="mt-4">
+                <div class="mt-4 d-flex flex-wrap gap-2">
                     <button type="button" class="btn btn-success btn-sm btn-action" id="saveBtn">
                         <i class="fas fa-paper-plane me-1"></i> Save & Send
                     </button>
@@ -112,11 +157,34 @@
         </div>
     </div>
 
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="card main-card h-100">
+                <div class="card-body">
+                    <label class="form-label small fw-bold text-muted">Filter by Month</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-filter text-primary"></i></span>
+                        <input type="month" id="monthFilter" class="form-control" onchange="renderBookings()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="clearFilter()">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card main-card h-100 income-card">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <p class="mb-1 opacity-75 fw-bold">Total Income (Filtered)</p>
+                    <h2 class="mb-0 fw-bold" id="totalIncomeDisplay">Rs. 0.00</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card main-card">
         <div class="card-body">
             <h5 class="card-title mb-4">Room 23 Records</h5>
             <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
+                <table class="table table-bordered table-striped align-middle mb-0">
                     <thead class="table-dark">
                     <tr>
                         <th>ID</th>
@@ -132,7 +200,7 @@
                     <tbody id="bookingTable"></tbody>
                 </table>
             </div>
-            <div id="noData" class="text-center text-muted py-4 d-none">No records found.</div>
+            <div id="noData" class="text-center text-muted py-4 d-none">No records found for the selected month.</div>
         </div>
     </div>
 </div>
@@ -140,8 +208,15 @@
 <script>
     const BASE_URL = "http://localhost:8080/api/v1/indoor-booking";
     const EMAIL_URL = "http://localhost:8080/api/v1/email/send";
+    const token = localStorage.getItem("jwt_token");
 
-    // PDF INVOICE GENERATOR
+    if (!token) window.location.href = "index.html";
+    const getHeaders = () => ({
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+    });
+
+    // --- PDF INVOICE ---
     function generateInvoice(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -150,48 +225,57 @@
         doc.setFontSize(22);
         doc.setTextColor(13, 110, 253);
         doc.text("PAHASARA STUDIO", 14, 20);
-
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text("📍 Studio: Room 23 Indoor", 14, 26);
         doc.text("Invoice Generated: " + new Date().toLocaleDateString(), 14, 31);
 
-        doc.setFontSize(18);
-        doc.setTextColor(0);
-        doc.text("INVOICE", 150, 20);
-
-        doc.setLineWidth(0.5);
-        doc.line(14, 40, 196, 40);
-        doc.setFontSize(12);
-        doc.text("BILL TO:", 14, 50);
-        doc.text(`Client Name : ${data.customerName}`, 14, 57);
-        doc.text(`Booking Date: ${data.bookingDate}`, 14, 63);
-
         doc.autoTable({
-            startY: 80,
+            startY: 50,
             head: [['Description', 'Date', 'Time Slot', 'Price (Rs.)']],
             body: [[shootTypeLabel, data.bookingDate, `${data.startTime} - ${data.endTime}`, parseFloat(data.price || 0).toLocaleString()]],
             theme: 'grid',
             headStyles: { fillColor: [13, 110, 253] }
         });
-
-        const finalY = doc.lastAutoTable.finalY + 15;
-        doc.text(`TOTAL PAID: Rs. ${parseFloat(data.price || 0).toLocaleString()}`, 130, finalY);
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.text(`TOTAL PAID: Rs. ${parseFloat(data.price || 0).toLocaleString()}`, 140, finalY);
         doc.save(`Invoice_${data.customerName}_${data.bookingDate}.pdf`);
     }
 
+    function generateInvoiceFromRow(b) { generateInvoice(b); }
+    function downloadInvoiceFromForm() { generateInvoice(getFormData()); }
+
     async function renderBookings() {
         const tbody = document.getElementById('bookingTable');
+        const incomeDisplay = document.getElementById('totalIncomeDisplay');
+        const selectedMonth = document.getElementById('monthFilter').value;
+
         tbody.innerHTML = '';
+        let totalIncome = 0;
+
         try {
-            const res = await fetch(BASE_URL);
-            const bookings = await res.json();
+            const res = await fetch(BASE_URL, { headers: getHeaders() });
+            if(res.status === 401 || res.status === 403) window.location.href = "index.html";
+
+            const result = await res.json();
+            let bookings = result.content || result;
+
+            if (selectedMonth) {
+                bookings = bookings.filter(b => b.bookingDate.startsWith(selectedMonth));
+            }
+
             if (!bookings || bookings.length === 0) {
                 document.getElementById('noData').classList.remove('d-none');
+                incomeDisplay.innerText = "Rs. 0.00";
                 return;
             }
             document.getElementById('noData').classList.add('d-none');
+
             bookings.forEach(b => {
+                if(b.status !== 'CANCELLED') {
+                    totalIncome += parseFloat(b.price || 0);
+                }
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>#${b.id}</td>
@@ -209,69 +293,101 @@
                     </td>`;
                 tbody.appendChild(tr);
             });
-        } catch (e) { console.error("Error fetching bookings:", e); }
+            incomeDisplay.innerText = `Rs. ${totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        } catch(e) { console.error(e); }
     }
 
-    function generateInvoiceFromRow(booking) { generateInvoice(booking); }
-
-    function downloadInvoiceFromForm() {
-        const data = getFormData();
-        generateInvoice(data);
+    function clearFilter() {
+        document.getElementById('monthFilter').value = '';
+        renderBookings();
     }
 
-    function getStatusClass(status) {
-        if (status === 'COMPLETED') return 'bg-completed';
-        if (status === 'BOOKED') return 'bg-booked';
-        if (status === 'CANCELLED') return 'bg-cancelled';
-        return 'bg-secondary';
-    }
-
-    // UPDATED ATTRACTIVE MESSAGING
     async function triggerAutoEmail(data, bookingId = "New") {
-        let subject = "";
-        let msg = "";
-        let alertType = "success";
-
+        let subject = "", msg = "";
         if (data.status === 'BOOKED') {
-            subject = "✨ Your Session is Confirmed! - Pahasara Studio";
-            msg = `Hello ${data.customerName},\n\n` +
-                `Great news! Your booking for Room 23 (ID: #${bookingId}) has been successfully confirmed. 📸\n\n` +
-                `📅 Date: ${data.bookingDate}\n` +
-                `🕒 Time Slot: ${data.startTime} to ${data.endTime}\n\n` +
-                `We are excited to help you capture these beautiful memories. See you soon at the studio!`;
+            subject = "✨ Session Confirmed - Pahasara Studio";
+            msg = `Hello ${data.customerName},\n\nBooking #${bookingId} is confirmed for ${data.bookingDate} at ${data.startTime}.`;
+        } else if (data.status === 'CANCELLED') {
+            subject = "Booking Update: Cancellation";
+            msg = `Hi ${data.customerName}, your booking for ${data.bookingDate} has been cancelled.`;
+        } else if (data.status === 'COMPLETED') {
+            subject = "❤️ Thank You - Pahasara Studio";
+            msg = `Dear ${data.customerName}, thank you for choosing Room 23! Your session is complete.`;
         }
-        else if (data.status === 'CANCELLED') {
-            subject = "Booking Update: Cancellation - Pahasara Studio";
-            msg = `Hi ${data.customerName},\n\n` +
-                `We're writing to confirm that your booking for ${data.bookingDate} has been cancelled. 🛑\n\n` +
-                `If this was a mistake or you'd like to reschedule, feel free to contact us anytime. We hope to see you another time!`;
-            alertType = "danger";
-        }
-        else if (data.status === 'COMPLETED') {
-            subject = "❤️ Thank You for Choosing Pahasara Studio!";
-            msg = `Dear ${data.customerName},\n\n` +
-                `It was a pleasure having you in Room 23 today! 🌟 Your session is now marked as complete.\n\n` +
-                `Your digital invoice has been generated. We hope you enjoyed the experience as much as we enjoyed the shoot. We can't wait to show you the results!\n\n` +
-                `Best regards,\nPahasara Studio Team`;
-            alertType = "info";
-            generateInvoice(data);
-        }
+
+        const formData = new FormData();
+        formData.append("toEmail", data.clientEmail);
+        formData.append("subject", subject);
+        formData.append("message", msg);
 
         try {
             await fetch(EMAIL_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ toEmail: data.clientEmail, subject: subject, message: msg })
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
             });
-            showAlert(alertType, `Update successful! A beautiful ${data.status} email has been sent to the client.`);
-        } catch (err) {
-            showAlert("warning", "Data saved successfully, but the email notification could not be sent.");
+            showAlert("success", `Update saved and email sent to ${data.clientEmail}`);
+        } catch(err) {
+            showAlert("warning", "Saved, but email service failed.");
         }
     }
 
-    function showAlert(type, msg) {
-        const alertBox = document.getElementById('alertPlaceholder');
-        alertBox.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    async function saveBooking() {
+        const dto = getFormData();
+        try {
+            const res = await fetch(BASE_URL, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(dto)
+            });
+            if(res.ok){
+                const result = await res.json();
+                await triggerAutoEmail(dto, result.content?.id || result.id);
+                renderBookings();
+                clearForm();
+            }
+        } catch(e){ showAlert("danger","Save failed."); }
+    }
+
+    async function updateBooking() {
+        const id = document.getElementById('bookingId').value;
+        const dto = getFormData();
+        try {
+            const res = await fetch(`${BASE_URL}/${id}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(dto)
+            });
+            if(res.ok){
+                await triggerAutoEmail(dto, id);
+                renderBookings();
+                clearForm();
+            }
+        } catch(e){ showAlert("danger","Update failed."); }
+    }
+
+    async function editBooking(id) {
+        try {
+            const res = await fetch(`${BASE_URL}/${id}`, { headers: getHeaders() });
+            const result = await res.json();
+            const b = result.content || result;
+
+            document.getElementById('bookingId').value = b.id;
+            document.getElementById('customerName').value = b.customerName;
+            document.getElementById('clientEmail').value = b.clientEmail;
+            document.getElementById('contactNumber').value = b.contactNumber;
+            document.getElementById('bookingDate').value = b.bookingDate;
+            document.getElementById('startTime').value = b.startTime;
+            document.getElementById('endTime').value = b.endTime;
+            document.getElementById('price').value = b.price;
+            document.getElementById('status').value = b.status;
+            document.getElementById('shootType').value = b.shootType;
+
+            document.getElementById('saveBtn').classList.add('d-none');
+            document.getElementById('updateBtn').classList.remove('d-none');
+            document.getElementById('invoiceBtn').classList.remove('d-none');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch(e){ console.error(e); }
     }
 
     function getFormData() {
@@ -289,72 +405,20 @@
         };
     }
 
-    async function saveBooking() {
-        const dto = getFormData();
-        if(!dto.customerName || !dto.clientEmail) return showAlert("danger", "Please provide a client name and email.");
-
-        try {
-            const res = await fetch(BASE_URL, {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify(dto)
-            });
-            if(res.ok) {
-                const savedData = await res.json();
-                await triggerAutoEmail(dto, savedData.id);
-                renderBookings();
-                clearForm();
-            }
-        } catch (e) { showAlert("danger", "Failed to connect to the server."); }
-    }
-
-    async function updateBooking() {
-        const id = document.getElementById('bookingId').value;
-        const dto = getFormData();
-
-        try {
-            const res = await fetch(`${BASE_URL}/${id}`, {
-                method: 'PUT',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify(dto)
-            });
-            if(res.ok) {
-                await triggerAutoEmail(dto, id);
-                renderBookings();
-                clearForm();
-            }
-        } catch (e) { showAlert("danger", "Failed to update booking details."); }
-    }
-
-    async function editBooking(id) {
-        try {
-            const res = await fetch(`${BASE_URL}/${id}`);
-            const b = await res.json();
-
-            document.getElementById('bookingId').value = b.id;
-            document.getElementById('customerName').value = b.customerName;
-            document.getElementById('clientEmail').value = b.clientEmail;
-            document.getElementById('contactNumber').value = b.contactNumber;
-            document.getElementById('bookingDate').value = b.bookingDate;
-            document.getElementById('startTime').value = b.startTime;
-            document.getElementById('endTime').value = b.endTime;
-            document.getElementById('price').value = b.price;
-            document.getElementById('status').value = b.status;
-            document.getElementById('shootType').value = b.shootType;
-
-            document.getElementById('saveBtn').classList.add('d-none');
-            document.getElementById('updateBtn').classList.remove('d-none');
-            document.getElementById('invoiceBtn').classList.remove('d-none');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (e) { console.error("Error loading record:", e); }
-    }
-
     function clearForm() {
         document.getElementById('bookingForm').reset();
         document.getElementById('bookingId').value = '';
         document.getElementById('saveBtn').classList.remove('d-none');
         document.getElementById('updateBtn').classList.add('d-none');
         document.getElementById('invoiceBtn').classList.add('d-none');
+    }
+
+    function getStatusClass(s) {
+        return s === 'COMPLETED' ? 'bg-completed' : s === 'BOOKED' ? 'bg-booked' : 'bg-cancelled';
+    }
+
+    function showAlert(type, msg){
+        document.getElementById('alertPlaceholder').innerHTML = `<div class="alert alert-${type} alert-dismissible fade show">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
     }
 
     document.getElementById('saveBtn').addEventListener('click', saveBooking);

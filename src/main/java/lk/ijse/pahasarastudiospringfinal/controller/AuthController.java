@@ -1,56 +1,51 @@
 package lk.ijse.pahasarastudiospringfinal.controller;
 
-import lk.ijse.pahasarastudiospringfinal.dto.*;
-import lk.ijse.pahasarastudiospringfinal.entity.User;
+import lk.ijse.pahasarastudiospringfinal.dto.UserDTO;
 import lk.ijse.pahasarastudiospringfinal.service.UserService;
 import lk.ijse.pahasarastudiospringfinal.util.JwtUtil;
-import lk.ijse.pahasarastudiospringfinal.util.MappingUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
-@RequestMapping("api/v1/auth")
-@CrossOrigin
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private MappingUtil mappingUtil;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @PostMapping("/login")
-    public ResponseEntity<ResponseDTO> login(@RequestBody AuthDTO authDTO) {
-        try {
-            // Fetch actual User entity from DB
-            User user = userService.loadUserEntityByEmail(authDTO.getEmail());
-
-            if (!passwordEncoder.matches(authDTO.getPassword(), user.getPassword())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ResponseDTO("01", "Authentication Failed: Wrong Password", null));
-            }
-
-            UserDTO userDTO = mappingUtil.toUserDTO(user);
-            String token = jwtUtil.generateToken(userDTO);
-
-            return ResponseEntity.ok(new ResponseDTO("00", "Login Successful", token));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDTO("01", e.getMessage(), null));
-        }
+    public AuthController(UserService userService, JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+        this.authenticationManager = authenticationManager;
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<ResponseDTO> logout() {
-        return ResponseEntity.ok(new ResponseDTO("00", "Session Cleared", null));
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String password = body.get("password");
+
+        // Use Spring's built-in Auth Manager
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+
+        final UserDetails userDetails = userService.loadUserByUsername(email);
+        final String token = jwtUtil.generateToken(userDetails);
+
+        return ResponseEntity.ok(Map.of(
+                "code", "00",
+                "message", "Login success",
+                "content", token
+        ));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody UserDTO user) {
+        UserDTO saved = userService.saveUser(user);
+        return ResponseEntity.ok(Map.of("code", "00", "message", "User registered", "content", saved.getEmail()));
     }
 }

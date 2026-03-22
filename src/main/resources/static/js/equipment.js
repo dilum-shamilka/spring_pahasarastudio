@@ -1,139 +1,110 @@
 const BASE_URL = "http://localhost:8080/api/v1/equipment";
+const TOKEN_KEY = "jwt_token";
 
 $(document).ready(() => {
     fetchEquipment();
-    $("#resetBtn").click(resetForm);
+    $("#equipmentForm").on("submit", handleFormSubmit);
 });
 
-// ================= FETCH ALL =================
+// Fetch All
 async function fetchEquipment() {
+    const token = localStorage.getItem(TOKEN_KEY);
     try {
-        const res = await fetch(`${BASE_URL}/getAll`);
+        const res = await fetch(`${BASE_URL}/getAll`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
         const data = await res.json();
         const tbody = $("#equipmentTableBody");
-        const noData = $("#noData");
         tbody.empty();
 
-        // Check for '00' success code or standard array
-        if (data.content && data.content.length > 0) {
-            noData.addClass("d-none");
-            data.content.forEach(e => {
+        const items = data.content || [];
+        if (items.length > 0) {
+            $("#noData").addClass("d-none");
+            items.forEach(e => {
                 tbody.append(`
-                    <tr id="row-${e.id}">
-                        <td>#${e.id}</td>
+                    <tr>
+                        <td class="ps-4">#${e.id}</td>
                         <td class="fw-bold">${e.itemName}</td>
-                        <td>${e.serialNumber}</td>
-                        <td><span class="status-badge">${e.status}</span></td>
+                        <td><code>${e.serialNumber}</code></td>
+                        <td><span class="badge ${e.status === 'AVAILABLE' ? 'bg-success' : 'bg-warning'}">${e.status}</span></td>
                         <td class="text-center">
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editEquipment(${e.id})">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment(${e.id})">Delete</button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="loadToForm(${e.id}, '${e.itemName}', '${e.serialNumber}', '${e.status}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment(${e.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </td>
                     </tr>`);
             });
         } else {
-            noData.removeClass("d-none");
+            $("#noData").removeClass("d-none");
         }
-    } catch (err) {
-        console.error("Server error:", err);
-    }
+    } catch (err) { console.error(err); }
 }
 
-// ================= SAVE / UPDATE =================
-document.getElementById("equipmentForm").addEventListener("submit", async e => {
-    e.preventDefault();
+// Populate Form for Edit
+function loadToForm(id, name, sn, status) {
+    $("#equipmentId").val(id); // Set hidden field
+    $("#itemName").val(name);
+    $("#serialNumber").val(sn);
+    $("#status").val(status);
 
-    const id = $("#equipmentId").val();
+    $("#saveBtn").html('<i class="fas fa-sync me-1"></i> Update').removeClass("btn-success").addClass("btn-primary");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Save or Update
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const token = localStorage.getItem(TOKEN_KEY);
+    const idValue = $("#equipmentId").val();
+
     const dto = {
-        id: id ? parseInt(id) : null,
-        itemName: $("#itemName").val().trim(),
-        serialNumber: $("#serialNumber").val().trim(),
-        status: $("#status").val(),
-        equipmentImages: []
+        itemName: $("#itemName").val(),
+        serialNumber: $("#serialNumber").val(),
+        status: $("#status").val()
     };
 
-    const endpoint = id ? `${BASE_URL}/update` : `${BASE_URL}/save`;
-    const method = id ? "PUT" : "POST";
+    const isUpdate = (idValue !== "" && idValue !== null);
+    if (isUpdate) dto.id = parseInt(idValue); // Convert to Number for Java Long
+
+    const endpoint = isUpdate ? `${BASE_URL}/update` : `${BASE_URL}/save`;
+    const method = isUpdate ? "PUT" : "POST";
 
     try {
         const res = await fetch(endpoint, {
             method: method,
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify(dto)
         });
 
         const result = await res.json();
-
-        if (res.ok || result.code === "00") {
-            alert(result.message || "Operation Successful");
+        if (result.code === "00") {
+            alert("✅ Success!");
             resetForm();
             fetchEquipment();
         } else {
-            alert("Error: " + result.message);
+            alert("⚠️ " + result.message);
         }
-    } catch (err) {
-        alert("Connection error.");
-    }
-});
-
-// ================= EDIT (FIXED) =================
-async function editEquipment(id) {
-    try {
-        // Double-check if your backend uses /get/ID or /search/ID
-        const res = await fetch(`${BASE_URL}/get/${id}`);
-        const data = await res.json();
-
-        // Check both '00' code and standard success response
-        if (data.code === "00" || data.content) {
-            const e = data.content;
-
-            // Populate Form Fields
-            $("#equipmentId").val(e.id);
-            $("#itemName").val(e.itemName);
-            $("#serialNumber").val(e.serialNumber);
-            $("#status").val(e.status);
-
-            // Change Save Button to Update Mode
-            $("#saveBtn").text("Update")
-                .removeClass("btn-success")
-                .addClass("btn-primary");
-
-            // Smooth scroll to form
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            alert("Equipment details not found.");
-        }
-    } catch (err) {
-        console.error("Edit error:", err);
-        alert("Error loading item details.");
-    }
+    } catch (err) { alert("❌ Error connecting to server."); }
 }
 
-// ================= DELETE =================
-async function deleteEquipment(id) {
-    if (confirm("Permanently delete this equipment?")) {
-        try {
-            const res = await fetch(`${BASE_URL}/delete/${id}`, { method: "DELETE" });
-            const result = await res.json();
-
-            if (res.ok || result.code === "00") {
-                alert(result.message || "Deleted Successfully");
-                fetchEquipment();
-            } else {
-                alert("Delete failed: " + result.message);
-            }
-        } catch (err) {
-            alert("Delete failed due to connection error.");
-        }
-    }
-}
-
-// ================= RESET =================
 function resetForm() {
-    $("#equipmentId").val(""); // Explicitly clear hidden ID
-    $("#equipmentForm")[0].reset(); // Reset visible fields
+    $("#equipmentId").val("");
+    $("#equipmentForm")[0].reset();
+    $("#saveBtn").html('<i class="fas fa-save me-1"></i> Save').removeClass("btn-primary").addClass("btn-success");
+}
 
-    // Revert Button UI
-    $("#saveBtn").text("Save")
-        .removeClass("btn-primary")
-        .addClass("btn-success");
+async function deleteEquipment(id) {
+    if (!confirm("Are you sure?")) return;
+    const token = localStorage.getItem(TOKEN_KEY);
+    await fetch(`${BASE_URL}/delete/${id}`, {
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    fetchEquipment();
 }

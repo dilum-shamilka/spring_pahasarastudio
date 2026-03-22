@@ -51,9 +51,82 @@ body {
     color: #212529 !important;
 }
 
-/* ----------------- RESPONSIVE ----------------- */
+/* --- BASE UPDATES --- */
+/* Ensure images and inputs don't overflow their containers */
+img, embed, svg, video { max-width: 100%; height: auto; }
+input, textarea { max-width: 100%; }
+
+/* --- RESPONSIVE MEDIA QUERIES --- */
+
+/* Desktop & Large Screens (992px and up) */
+@media (min-width: 992px) {
+    .container { max-width: 1100px; margin: 0 auto; }
+    .custom-panel { display: flex; gap: 20px; flex-wrap: wrap; }
+}
+
+/* Tablet (Max 768px) */
 @media (max-width: 768px) {
-    .row.g-3 > div {
+    section { padding: 20px 15px; }
+
+    /* Stack form buttons vertically */
+    .btn-save, .btn-reset, .btn-update, .btn-action {
+        width: 100%;
         margin-bottom: 10px;
+        display: block;
     }
+
+    /* Table Responsiveness: Force horizontal scroll for deep data */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+    .custom-panel { padding: 20px; }
+    h2 { font-size: 1.5rem; }
+}
+
+/* Mobile Large (Max 425px) */
+@media (max-width: 425px) {
+    .container { margin-top: 1rem !important; padding: 0 10px; }
+
+    /* Nav buttons stacking */
+    .nav-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nav-buttons a { width: 100%; text-align: center; }
+
+    /* Form UI adjustments */
+    .form-control { font-size: 16px; /* Prevents iOS zoom on focus */ }
+    .card-body.p-4 { padding: 1rem !important; }
+
+    /* Action buttons in tables: horizontal but wrapped */
+    .text-center {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
+}
+
+/* Mobile Small (Max 320px) */
+@media (max-width: 320px) {
+    h2 { font-size: 1.2rem; }
+
+    .badge-role {
+        padding: 2px 8px;
+        font-size: 0.7rem;
+    }
+
+    .btn-edit-ui, .btn-delete-ui {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+
 }

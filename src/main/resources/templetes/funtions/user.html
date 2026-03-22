@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pahasara Studio | User Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* --- Base Styles --- */
+        body { background:#f4f7f6; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: all 0.3s ease; }
+        .main-card { border:none; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.08); margin-bottom:25px; }
+        .btn-action { width:110px; }
+        table tbody tr:hover { background:rgba(0,0,0,0.03); }
+        .badge { font-weight: 500; text-transform: uppercase; padding: 0.5em 0.8em; }
+
+        /* --- Custom Responsive Enhancements --- */
+
+        /* Laptop (Max 1024px) */
+        @media (max-width: 1024px) {
+            .container { padding: 0 6%; }
+        }
+
+        /* Tablet (Max 768px) */
+        @media (max-width: 768px) {
+            .container { margin-top: 2rem !important; }
+            .btn-action { width: 100%; margin-bottom: 8px; }
+            h2 { font-size: 1.6rem; text-align: center; }
+            .main-card { margin-bottom: 15px; }
+        }
+
+        /* Mobile View: Transform Table to Cards (Max 576px) */
+        @media (max-width: 576px) {
+            .table-responsive { border: none; }
+
+            /* Hide the original table headers */
+            thead { display: none; }
+
+            /* Make each row look like a standalone card */
+            #userTableBody tr {
+                display: block;
+                margin-bottom: 1.5rem;
+                background: #fff;
+                border: 1px solid #dee2e6;
+                border-radius: 12px;
+                padding: 10px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            }
+
+            /* Display table cells as flex rows with labels */
+            #userTableBody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: right;
+                border: none;
+                padding: 8px 10px;
+                border-bottom: 1px solid #f1f1f1;
+            }
+
+            /* Inject data labels using the 'data-label' attribute */
+            #userTableBody td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                color: #6c757d;
+                text-align: left;
+            }
+
+            /* Remove border from the last cell (Actions) */
+            #userTableBody td:last-child {
+                border-bottom: none;
+                justify-content: center;
+                gap: 15px;
+                margin-top: 5px;
+            }
+
+            #userTableBody td:last-child::before {
+                content: ""; /* Hide 'Actions' label for buttons */
+            }
+        }
+
+        /* Mobile Small (Max 320px) */
+        @media (max-width: 320px) {
+            h2 { font-size: 1.3rem; }
+            .badge { font-size: 0.7rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container mt-5">
+    <div class="mb-3">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <h2 class="mb-4">👤 User Management</h2>
+
+    <div class="card main-card">
+        <div class="card-body p-4">
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <input type="hidden" id="userRole" value="USER">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Full Name</label>
+                        <input type="text" id="userName" class="form-control shadow-sm" placeholder="e.g. Janaka Pahasara" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Email Address</label>
+                        <input type="email" id="userEmail" class="form-control shadow-sm" placeholder="name@example.com" required>
+                    </div>
+                </div>
+                <div class="mt-4 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-success btn-sm btn-action shadow-sm" id="saveBtn">Save</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-action shadow-sm" id="resetBtn">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card main-card">
+        <div class="card-body">
+            <h5 class="mb-4">All System Users</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="noData" class="text-center text-muted py-5 d-none">
+                <i class="fas fa-user-slash fa-2x mb-3"></i>
+                <p>No users found in the system</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "http://localhost:8080/api/v1/users";
+    let userCache = [];
+
+    function getAuthToken() {
+        return localStorage.getItem("jwt_token") || localStorage.getItem("token") || localStorage.getItem("jwtToken");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (!getAuthToken()) {
+            // window.location.href = "index.html";
+            console.warn("No token found. Make sure you are logged in.");
+        }
+        fetchUsers();
+    });
+
+    // 1. FETCH & DISPLAY
+    async function fetchUsers() {
+        const tbody = document.getElementById("userTableBody");
+        const noData = document.getElementById("noData");
+
+        try {
+            const res = await fetch(`${API_BASE}/getAll?t=${new Date().getTime()}`, {
+                headers: { Authorization: `Bearer ${getAuthToken()}` }
+            });
+
+            const users = await res.json();
+            userCache = Array.isArray(users) ? users : (users.content || users.data || []);
+
+            tbody.innerHTML = "";
+            if (userCache.length === 0) {
+                noData.classList.remove("d-none");
+                return;
+            }
+            noData.classList.add("d-none");
+
+            userCache.forEach(u => {
+                const role = u.role ? u.role.toUpperCase() : "USER";
+                let color = "secondary";
+
+                if (role === "OWNER") color = "danger";
+                else if (role === "ADMIN") color = "primary";
+                else if (role === "PHOTOGRAPHER") color = "info";
+                else if (role === "VIDEOGRAPHER") color = "warning text-dark";
+                else if (role === "RECEPTION") color = "success";
+                else color = "dark";
+
+                // We add data-label attributes to support the mobile card-view CSS
+                tbody.innerHTML += `
+                    <tr>
+                        <td data-label="ID">#${u.userId}</td>
+                        <td data-label="Name"><strong>${u.name}</strong></td>
+                        <td data-label="Email">${u.email}</td>
+                        <td data-label="Role"><span class="badge bg-${color}">${role}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="populateEdit(${u.userId})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${u.userId})" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Server connection failed</td></tr>`;
+        }
+    }
+
+    // 2. POPULATE FOR EDIT
+    function populateEdit(id) {
+        const user = userCache.find(u => Number(u.userId) === Number(id));
+        if (!user) return;
+
+        document.getElementById("userId").value = user.userId;
+        document.getElementById("userName").value = user.name;
+        document.getElementById("userEmail").value = user.email;
+        document.getElementById("userRole").value = (user.role || "USER").toUpperCase();
+
+        const btn = document.getElementById("saveBtn");
+        btn.innerText = "Update User";
+        btn.classList.replace("btn-success", "btn-warning");
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // 3. SAVE OR UPDATE
+    document.getElementById("userForm").addEventListener("submit", async e => {
+        e.preventDefault();
+
+        const id = document.getElementById("userId").value;
+        const isUpdate = id !== "";
+
+        const dto = {
+            userId: isUpdate ? parseInt(id) : null,
+            name: document.getElementById("userName").value,
+            email: document.getElementById("userEmail").value,
+            role: document.getElementById("userRole").value
+        };
+
+        const endpoint = isUpdate ? `${API_BASE}/update` : `${API_BASE}/save`;
+        const method = isUpdate ? "PUT" : "POST";
+
+        try {
+            const res = await fetch(endpoint, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${getAuthToken()}`
+                },
+                body: JSON.stringify(dto)
+            });
+
+            if (res.ok) {
+                alert(isUpdate ? "User Updated Successfully!" : "User Saved Successfully!");
+                resetForm();
+                fetchUsers();
+            } else {
+                alert("Request failed. Check if email is unique.");
+            }
+        } catch (e) {
+            alert("Network error occurred.");
+        }
+    });
+
+    // 4. DELETE
+    async function deleteUser(id) {
+        if (!confirm("Remove this user permanently?")) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/delete/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${getAuthToken()}` }
+            });
+            if (res.ok) fetchUsers();
+            else alert("Could not delete user.");
+        } catch (e) { alert("Server error."); }
+    }
+
+    // 5. RESET
+    function resetForm() {
+        document.getElementById("userForm").reset();
+        document.getElementById("userId").value = "";
+        document.getElementById("userRole").value = "USER";
+        const btn = document.getElementById("saveBtn");
+        btn.innerText = "Save";
+        btn.classList.add("btn-success");
+        btn.classList.remove("btn-warning");
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+</script>
+
+</body>
+</html>

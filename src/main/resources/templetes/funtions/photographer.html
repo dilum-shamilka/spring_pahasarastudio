@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pahasara Studio | Photographer/Videographer Management</title>
+
+    <script>
+        const AUTH_TOKEN = localStorage.getItem("jwtToken") || localStorage.getItem("jwt_token") || localStorage.getItem("token");
+        if (!AUTH_TOKEN) {
+            window.location.replace("index.html");
+        }
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* --- Base Styles --- */
+        body {
+            display: none;
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+        .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .btn-action { width: 110px; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+        .bg-available { background-color: #d1e7dd; color: #0f5132; }
+        .bg-unavailable { background-color: #f8d7da; color: #842029; }
+        table.table tbody tr:hover { background-color: rgba(0,0,0,0.03); transition: background-color 0.2s; }
+        table.table td, table.table th { vertical-align: middle; }
+        .nav-buttons .btn { margin-bottom: 15px; display: inline-flex; align-items: center; }
+
+        /* --- RESPONSIVE TRANSFORMATIONS --- */
+
+        /* Tablet (Max 768px) - Stacking form content */
+        @media (max-width: 768px) {
+            .col-md-4, .col-md-2 { width: 100%; }
+            .nav-buttons { text-align: left; }
+            h2 { font-size: 1.6rem; }
+            .btn-action { width: 48%; padding: 10px; }
+            .d-flex.gap-2 { justify-content: flex-start; }
+        }
+
+        /* Mobile View: Transform Table to Cards (Max 576px) */
+        @media (max-width: 576px) {
+            .table-responsive { border: none; }
+            .table thead { display: none; } /* Hide headers on mobile */
+
+            #photographerTableBody tr {
+                display: block;
+                margin-bottom: 1.2rem;
+                background: #fff;
+                border: 1px solid #dee2e6;
+                border-radius: 12px;
+                padding: 10px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            }
+
+            #photographerTableBody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: none;
+                padding: 8px 10px;
+                text-align: right;
+            }
+
+            /* Separator for clarity */
+            #photographerTableBody td:not(:last-child) {
+                border-bottom: 1px solid #f8f9fa;
+            }
+
+            /* Inject data labels from JavaScript */
+            #photographerTableBody td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.7rem;
+                color: #6c757d;
+                float: left;
+            }
+
+            /* Actions Row Styling */
+            #photographerTableBody td:last-child {
+                justify-content: center;
+                background: #fcfcfc;
+                margin-top: 5px;
+                border-radius: 0 0 10px 10px;
+            }
+
+            .btn-action { width: 100%; margin-bottom: 5px; }
+            h2 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="nav-buttons mb-4">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <h2 class="mb-4">📸 Photographer/Videographer Management</h2>
+
+    <div class="card main-card mb-4">
+        <div class="card-body">
+            <form id="photographerForm">
+                <input type="hidden" id="photographerId">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Name / Specification</label>
+                        <input type="text" id="photographerName" class="form-control" placeholder="Enter name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Email Address</label>
+                        <input type="email" id="photographerEmail" class="form-control" placeholder="email@example.com" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Salary (LKR)</label>
+                        <input type="number" id="photographerSalary" class="form-control" placeholder="0.00" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Status</label>
+                        <select id="photographerStatus" class="form-select">
+                            <option value="AVAILABLE" selected>AVAILABLE</option>
+                            <option value="UNAVAILABLE">UNAVAILABLE</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mt-2">
+                        <label class="form-label small fw-bold">Specialization</label>
+                        <select id="photographerRole" class="form-select">
+                            <option value="Photographer" selected>Photographer</option>
+                            <option value="Videographer">Videographer</option>
+                            <option value="Drone Operator">Drone Operator</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4 d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-success btn-sm btn-action" id="saveBtn">Save</button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-action" id="resetBtn" onclick="resetForm()">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card main-card">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Staff Directory</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Salary</th>
+                        <th>Status</th>
+                        <th>Role</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="photographerTableBody"></tbody>
+                </table>
+            </div>
+            <div id="noData" class="text-center text-muted py-4 d-none">No records found.</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const API_BASE = "http://localhost:8080/api/v1/photographers";
+    const TOKEN = localStorage.getItem("jwtToken") || localStorage.getItem("jwt_token") || localStorage.getItem("token");
+
+    $(document).ready(function() {
+        if (!TOKEN) {
+            window.location.replace("index.html");
+            return;
+        }
+        document.body.style.display = "block";
+        fetchPhotographers();
+    });
+
+    function handleAuthError(res) {
+        if (res.status === 401 || res.status === 403) {
+            alert("Session expired. Please login again.");
+            localStorage.clear();
+            window.location.replace("index.html");
+            return true;
+        }
+        return false;
+    }
+
+    async function fetchPhotographers() {
+        try {
+            const res = await fetch(`${API_BASE}/getAll`, {
+                headers: { "Authorization": `Bearer ${TOKEN}` }
+            });
+            if (handleAuthError(res)) return;
+
+            const data = await res.json();
+            const tbody = document.getElementById("photographerTableBody");
+            const noData = document.getElementById("noData");
+            tbody.innerHTML = "";
+
+            if (data.code === "00" && data.content && data.content.length > 0) {
+                noData.classList.add("d-none");
+                data.content.forEach(p => {
+                    const statusClass = p.status === 'AVAILABLE' ? 'bg-available' : 'bg-unavailable';
+
+                    // Note the "data-label" attributes here. They are used by CSS for mobile labels.
+                    tbody.innerHTML += `
+                <tr>
+                    <td data-label="ID">#${p.id}</td>
+                    <td data-label="Name"><strong>${p.name}</strong></td>
+                    <td data-label="Email">${p.email}</td>
+                    <td data-label="Salary">Rs. ${parseFloat(p.salary).toLocaleString()}</td>
+                    <td data-label="Status"><span class="status-badge ${statusClass}">${p.status}</span></td>
+                    <td data-label="Role">${p.role || 'Photographer'}</td>
+                    <td data-label="Actions" class="text-center">
+                        <button class="btn btn-sm btn-outline-primary me-1"
+                                onclick="editPhotographer(${p.id}, '${p.name}', '${p.email}', ${p.salary}, '${p.status}', '${p.role}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deletePhotographer(${p.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+                });
+            } else {
+                noData.classList.remove("d-none");
+            }
+        } catch (error) {
+            console.error("Load Error:", error);
+            document.getElementById("noData").classList.remove("d-none");
+        }
+    }
+
+    document.getElementById("photographerForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const idValue = document.getElementById("photographerId").value;
+
+        const dto = {
+            id: idValue ? parseInt(idValue) : null,
+            name: document.getElementById("photographerName").value,
+            email: document.getElementById("photographerEmail").value,
+            salary: parseFloat(document.getElementById("photographerSalary").value),
+            status: document.getElementById("photographerStatus").value,
+            role: document.getElementById("photographerRole").value
+        };
+
+        try {
+            const url = dto.id ? `${API_BASE}/update` : `${API_BASE}/save`;
+            const method = dto.id ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${TOKEN}`
+                },
+                body: JSON.stringify(dto)
+            });
+
+            if (handleAuthError(res)) return;
+            const result = await res.json();
+
+            if(result.code === "00") {
+                alert(dto.id ? "Record Updated!" : "New Record Saved!");
+                resetForm();
+                fetchPhotographers();
+            } else {
+                alert("Error: " + (result.message || "Action failed"));
+            }
+        } catch (error) { alert("Server connection failed."); }
+    });
+
+    async function deletePhotographer(id) {
+        if (!confirm("Are you sure you want to delete this record?")) return;
+        try {
+            const res = await fetch(`${API_BASE}/delete/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${TOKEN}` }
+            });
+            if (handleAuthError(res)) return;
+            const result = await res.json();
+            if (result.code === "00") fetchPhotographers();
+        } catch (error) { alert("Server error."); }
+    }
+
+    function editPhotographer(id, name, email, salary, status, role) {
+        document.getElementById("photographerId").value = id;
+        document.getElementById("photographerName").value = name;
+        document.getElementById("photographerEmail").value = email;
+        document.getElementById("photographerSalary").value = salary;
+        document.getElementById("photographerStatus").value = status;
+        document.getElementById("photographerRole").value = role;
+
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.innerText = "Update Record";
+        saveBtn.className = "btn btn-primary btn-sm btn-action";
+
+        // Smooth scroll back to form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById("photographerForm").reset();
+        document.getElementById("photographerId").value = "";
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.innerText = "Save";
+        saveBtn.className = "btn btn-success btn-sm btn-action";
+    }
+</script>
+</body>
+</html>

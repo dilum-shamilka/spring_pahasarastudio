@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pahasara Studio | Invoice System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+        .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+        .bg-paid { background-color: #d1e7dd; color: #0f5132; }
+        .bg-unpaid { background-color: #f8d7da; color: #842029; }
+        .bg-advanced { background-color: #fff3cd; color: #664d03; }
+        .balance-field { background-color: #fff5f5 !important; font-weight: bold; }
+
+        .stats-card { border: none; border-radius: 12px; transition: transform 0.2s; border-left: 5px solid rgba(255,255,255,0.3); }
+        .stats-card:hover { transform: translateY(-5px); }
+        .income-icon { font-size: 2rem; opacity: 0.3; }
+
+        /* Custom Responsive Adjustments */
+        @media (max-width: 1024px) {
+            .container { padding: 20px 4%; }
+        }
+
+        @media (max-width: 768px) {
+            .header-flex { flex-direction: column; text-align: center; gap: 15px; }
+            .stats-card { margin-bottom: 10px; }
+            .filter-section { width: 100%; justify-content: center; margin-top: 15px; }
+            h2 { font-size: 1.5rem; }
+            .table-responsive { font-size: 0.85rem; }
+        }
+
+        @media (max-width: 425px) {
+            .main-card .card-body { padding: 1.25rem !important; }
+            .form-label { font-size: 0.85rem; }
+            .btn { width: 100%; margin-bottom: 10px; }
+            .btn-group-mobile { display: flex; flex-direction: column; }
+        }
+
+        /* Hide ID column on very small screens to save space */
+        @media (max-width: 375px) {
+            .hide-xs { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-4 py-md-5">
+    <div id="alertPlaceholder"></div>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 header-flex">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm w-auto">
+            <i class="fas fa-arrow-left me-1"></i> Dashboard
+        </a>
+        <h2 class="fw-bold mb-0">💰 Financial Overview</h2>
+        <div class="filter-section d-flex align-items-center bg-white p-2 rounded shadow-sm">
+            <label class="me-2 fw-bold text-muted small text-uppercase mb-0">Month:</label>
+            <input type="month" id="monthPicker" class="form-control form-control-sm border-0" onchange="getAllInvoices()">
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card stats-card bg-primary text-white p-3 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-uppercase opacity-75">Target Revenue</div>
+                        <h3 class="fw-bold mb-0">LKR <span id="statTotalRev">0.00</span></h3>
+                    </div>
+                    <i class="fas fa-file-invoice-dollar income-icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card stats-card bg-success text-white p-3 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-uppercase opacity-75">Actual Income</div>
+                        <h3 class="fw-bold mb-0">LKR <span id="statTotalIncome">0.00</span></h3>
+                    </div>
+                    <i class="fas fa-hand-holding-usd income-icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="card stats-card bg-danger text-white p-3 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-uppercase opacity-75">Outstanding</div>
+                        <h3 class="fw-bold mb-0">LKR <span id="statTotalPending">0.00</span></h3>
+                    </div>
+                    <i class="fas fa-clock income-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card main-card">
+        <div class="card-header bg-dark text-white py-3">
+            <h5 class="mb-0 text-center text-md-start" id="formHeader">Create New Invoice</h5>
+        </div>
+        <div class="card-body p-4">
+            <form id="invoiceForm">
+                <input type="hidden" id="invoiceId">
+                <div class="row g-3">
+                    <div class="col-6 col-md-2">
+                        <label class="form-label fw-semibold">Invoice #</label>
+                        <input type="text" id="invoiceNumber" class="form-control" placeholder="INV-1001" required>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold">Booking ID</label>
+                        <div class="input-group">
+                            <input type="number" id="bookingId" class="form-control" placeholder="ID" required>
+                            <button class="btn btn-primary" type="button" onclick="fetchBookingDetails(true)">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label fw-semibold">Date</label>
+                        <input type="date" id="invoiceDate" class="form-control" required>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label fw-semibold">Total (LKR)</label>
+                        <input type="number" step="0.01" id="totalAmount" class="form-control" oninput="calculatePayments()" required>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label fw-semibold">Paid Amount</label>
+                        <input type="number" step="0.01" id="paidAmount" class="form-control" value="0.00" oninput="calculatePayments()">
+                    </div>
+                    <div class="col-6 col-md-1">
+                        <label class="form-label fw-semibold">Balance</label>
+                        <input type="text" id="balanceDue" class="form-control balance-field" readonly value="0.00">
+                    </div>
+
+                    <div id="bookingDetailsCard" class="col-12 d-none mt-2">
+                        <div class="alert alert-info py-2 px-3 mb-0 small">
+                            <i class="fas fa-info-circle me-2"></i><strong>Client:</strong> <span id="displayCust">--</span> | <strong>Package:</strong> <span id="displayServ">--</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select id="paymentStatus" class="form-select" style="pointer-events: none; background-color: #e9ecef;">
+                            <option value="UNPAID">UNPAID</option>
+                            <option value="ADVANCED">ADVANCED</option>
+                            <option value="PAID">PAID</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-9 text-end mt-4 btn-group-mobile">
+                        <button type="button" class="btn btn-secondary px-4 me-md-2" onclick="resetUI()">Clear</button>
+                        <button type="submit" id="btnSave" class="btn btn-success px-4">Save & Notify</button>
+                        <button type="button" id="btnUpdate" class="btn btn-primary d-none px-4" onclick="updateInvoice()">Update & Notify</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card main-card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                <tr>
+                    <th class="ps-3 hide-xs">ID</th>
+                    <th>Inv #</th>
+                    <th class="hide-xs">Booking</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="invoiceTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = "http://localhost:8080/api/v1/invoices";
+    const BOOKING_URL = "http://localhost:8080/api/v1/bookings";
+    const EMAIL_URL = "http://localhost:8080/api/v1/email/send";
+    const TOKEN_KEY = "jwt_token";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if(!localStorage.getItem(TOKEN_KEY)) window.location.href = "index.html";
+
+        const now = new Date();
+        const currentMonth = now.toISOString().substring(0, 7);
+        document.getElementById('monthPicker').value = currentMonth;
+        document.getElementById('invoiceDate').valueAsDate = now;
+        getAllInvoices();
+    });
+
+    function updateIncomeStats(invoices) {
+        let totalRevenue = 0, totalIncome = 0, totalPending = 0;
+        invoices.forEach(inv => {
+            const total = parseFloat(inv.totalAmount || 0);
+            const paid = parseFloat(inv.paidAmount || 0);
+            totalRevenue += total;
+            totalIncome += paid;
+            totalPending += (total - paid);
+        });
+        document.getElementById('statTotalRev').innerText = totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('statTotalIncome').innerText = totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('statTotalPending').innerText = totalPending.toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+
+    async function getAllInvoices(){
+        const selectedMonth = document.getElementById('monthPicker').value;
+        try{
+            const data = await authorizedFetch(`${BASE_URL}/getAll`);
+            const tbody = document.getElementById('invoiceTableBody');
+            tbody.innerHTML='';
+
+            if(data.code==="00" && data.content){
+                const filteredInvoices = data.content.filter(inv => !selectedMonth || inv.date.startsWith(selectedMonth));
+                updateIncomeStats(filteredInvoices);
+
+                filteredInvoices.forEach(inv => {
+                    const total = parseFloat(inv.totalAmount || 0);
+                    const paid = parseFloat(inv.paidAmount || 0);
+                    const balance = (total - paid).toFixed(2);
+                    let statusClass = inv.paymentStatus==='PAID'?'bg-paid':inv.paymentStatus==='UNPAID'?'bg-unpaid':'bg-advanced';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td class="ps-3 hide-xs">#${inv.id}</td>
+                    <td class="fw-bold">${inv.invoiceNumber}</td>
+                    <td class="hide-xs">#${inv.bookingId}</td>
+                    <td>${inv.date}</td>
+                    <td>${total.toFixed(2)}</td>
+                    <td class="text-success">${paid.toFixed(2)}</td>
+                    <td class="text-danger fw-bold">${balance}</td>
+                    <td><span class="status-badge ${statusClass}">${inv.paymentStatus}</span></td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-sm btn-outline-success me-1 p-1" onclick="handlePDF(${inv.id})"><i class="fas fa-file-pdf"></i></button>
+                            <button class="btn btn-sm btn-outline-primary me-1 p-1" onclick="prepareUpdate(${inv.id})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger p-1" onclick="deleteInvoice(${inv.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>`;
+                    tbody.appendChild(row);
+                });
+            }
+        }catch(err){ console.error(err); }
+    }
+
+    function calculatePayments() {
+        const total = parseFloat(document.getElementById('totalAmount').value) || 0;
+        const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
+        const statusDropdown = document.getElementById('paymentStatus');
+        const balanceField = document.getElementById('balanceDue');
+        const balance = total - paid;
+        balanceField.value = balance.toFixed(2);
+        if (paid <= 0) statusDropdown.value = "UNPAID";
+        else if (paid < total) statusDropdown.value = "ADVANCED";
+        else statusDropdown.value = "PAID";
+        balanceField.style.color = (balance > 0) ? "#dc3545" : "#198754";
+    }
+
+    async function fetchBookingDetails(updateTotal = false){
+        const bId = document.getElementById('bookingId').value;
+        if(!bId) return;
+        try{
+            const data = await authorizedFetch(`${BOOKING_URL}/get/${bId}`);
+            if(data.code==="00" && data.content){
+                const booking = data.content;
+                document.getElementById('bookingDetailsCard').classList.remove('d-none');
+                document.getElementById('displayCust').innerText = booking.clientEmail || "N/A";
+                document.getElementById('displayServ').innerText = booking.serviceName || "Photography Session";
+                if(updateTotal) document.getElementById('totalAmount').value = booking.totalPrice || 0;
+                calculatePayments();
+            }
+        }catch(err){ console.error(err); }
+    }
+
+    async function authorizedFetch(url, options={}) {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...options.headers };
+        const response = await fetch(url, {...options, headers});
+        if(response.status===401) window.location.href="index.html";
+        return response.json();
+    }
+
+    function showAlert(type,msg){
+        const alertBox = document.getElementById('alertPlaceholder');
+        alertBox.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    }
+
+    async function prepareUpdate(id){
+        const data = await authorizedFetch(`${BASE_URL}/get/${id}`);
+        if(data.code==="00"){
+            const inv = data.content;
+            document.getElementById('invoiceId').value = inv.id;
+            document.getElementById('invoiceNumber').value = inv.invoiceNumber;
+            document.getElementById('bookingId').value = inv.bookingId;
+            document.getElementById('invoiceDate').value = inv.date;
+            document.getElementById('totalAmount').value = inv.totalAmount;
+            document.getElementById('paidAmount').value = inv.paidAmount;
+            await fetchBookingDetails(false);
+            calculatePayments();
+            document.getElementById('btnSave').classList.add('d-none');
+            document.getElementById('btnUpdate').classList.remove('d-none');
+            document.getElementById('formHeader').innerText = "Edit Invoice #" + inv.id;
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+    }
+
+    document.getElementById('invoiceForm').addEventListener('submit', async function(e){
+        e.preventDefault();
+        const dto = getFormData();
+        try{
+            const data = await authorizedFetch(`${BASE_URL}/save`,{method:'POST',body:JSON.stringify(dto)});
+            if(data.code==="00"){
+                await triggerInvoiceEmail(dto);
+                showAlert("success","Invoice Saved!");
+                resetUI();
+                getAllInvoices();
+            }
+        }catch(err){ showAlert("danger","Save failed."); }
+    });
+
+    async function updateInvoice(){
+        const dto = getFormData();
+        try{
+            const data = await authorizedFetch(`${BASE_URL}/update`,{method:'PUT',body:JSON.stringify(dto)});
+            if(data.code==="00"){
+                await triggerInvoiceEmail(dto);
+                showAlert("info","Invoice Updated!");
+                resetUI();
+                getAllInvoices();
+            }
+        }catch(err){ showAlert("danger","Update failed."); }
+    }
+
+    function getFormData(){
+        return {
+            id: document.getElementById('invoiceId').value ? parseInt(document.getElementById('invoiceId').value) : null,
+            invoiceNumber: document.getElementById('invoiceNumber').value,
+            bookingId: parseInt(document.getElementById('bookingId').value),
+            date: document.getElementById('invoiceDate').value,
+            totalAmount: parseFloat(document.getElementById('totalAmount').value || 0),
+            paidAmount: parseFloat(document.getElementById('paidAmount').value || 0),
+            paymentStatus: document.getElementById('paymentStatus').value
+        };
+    }
+
+    function resetUI(){
+        document.getElementById('invoiceForm').reset();
+        document.getElementById('invoiceDate').valueAsDate = new Date();
+        document.getElementById('invoiceId').value="";
+        document.getElementById('balanceDue').value="0.00";
+        document.getElementById('btnSave').classList.remove('d-none');
+        document.getElementById('btnUpdate').classList.add('d-none');
+        document.getElementById('bookingDetailsCard').classList.add('d-none');
+        document.getElementById('formHeader').innerText="Generate New Invoice";
+    }
+
+    async function deleteInvoice(id){
+        if(confirm("Delete this invoice?")){
+            try {
+                await authorizedFetch(`${BASE_URL}/delete/${id}`,{method:'DELETE'});
+                getAllInvoices();
+            } catch(e) { showAlert("danger", "Delete failed."); }
+        }
+    }
+
+    async function handlePDF(id) {
+        const data = await authorizedFetch(`${BASE_URL}/get/${id}`);
+        if(data.code==="00") downloadPDF(data.content);
+    }
+
+    function downloadPDF(inv){
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const balance = inv.totalAmount - inv.paidAmount;
+        doc.setFontSize(20);
+        doc.text("PAHASARA STUDIO - RECEIPT", 105, 20, null, null, "center");
+        doc.setFontSize(12);
+        doc.text(`Invoice No: ${inv.invoiceNumber}`, 20, 40);
+        doc.text(`Total Amount: LKR ${inv.totalAmount}`, 20, 50);
+        doc.text(`Paid Amount: LKR ${inv.paidAmount}`, 20, 60);
+        doc.text(`Balance Due: LKR ${balance.toFixed(2)}`, 20, 70);
+        doc.text(`Status: ${inv.paymentStatus}`, 20, 80);
+        doc.save(`${inv.invoiceNumber}.pdf`);
+    }
+
+    async function triggerInvoiceEmail(dto){
+        const email = document.getElementById('displayCust').innerText;
+        if(!email || email==="--" || email==="N/A") return;
+        const formData = new FormData();
+        formData.append("toEmail", email);
+        formData.append("subject", `Invoice Update: ${dto.invoiceNumber}`);
+        formData.append("message", `Total: LKR ${dto.totalAmount}\nPaid: LKR ${dto.paidAmount}\nStatus: ${dto.paymentStatus}`);
+        try{
+            await fetch(EMAIL_URL,{method:"POST",headers:{'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`},body: formData});
+        }catch(err){ console.error("Email failed", err); }
+    }
+</script>
+</body>
+</html>

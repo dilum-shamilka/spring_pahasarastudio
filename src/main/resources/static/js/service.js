@@ -1,101 +1,163 @@
-const API_BASE = "http://localhost:8080/api/v1/services";
+const BASE_URL = "http://localhost:8080/api/v1/services";
+const TOKEN_KEY = "jwt_token"; // Unified key for Pahasara Studio
 
-// Fetch and display services
-async function fetchServices() {
-    try {
-        const res = await fetch(`${API_BASE}/getAll`);
-        const data = await res.json();
-        const tbody = document.getElementById("serviceTableBody");
-        tbody.innerHTML = "";
+$(document).ready(function () {
+    const token = localStorage.getItem(TOKEN_KEY);
 
-        data.forEach(service => {
-            const statusClass = service.status === 'ACTIVE' ? 'bg-active' : 'bg-inactive';
-            tbody.innerHTML += `
-        <tr>
-          <td class="ps-4 fw-bold">#${service.id}</td>
-          <td class="fw-semibold">${service.serviceName}</td>
-          <td>Rs. ${parseFloat(service.price).toLocaleString()}</td>
-          <td class="text-muted small">${service.description || 'No description'}</td>
-          <td><span class="status-badge ${statusClass}">${service.status}</span></td>
-          <td class="text-center">
-            <button class="btn btn-sm btn-outline-primary me-1" onclick="editService(${service.id})">Edit</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteService(${service.id})">Delete</button>
-          </td>
-        </tr>`;
-        });
-    } catch (error) {
-        console.error("Error fetching services:", error);
+    // 1. Initial Auth Check
+    if (!token || token === "undefined") {
+        window.location.href = "index.html";
+        return;
     }
+
+    // 2. Global AJAX Configuration
+    $.ajaxSetup({
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        },
+        error: function(xhr) {
+            if (xhr.status === 401 || xhr.status === 403) {
+                alert("Session expired or Unauthorized access.");
+                localStorage.clear();
+                window.location.href = "index.html";
+            }
+        }
+    });
+
+    // 3. Page Initialization
+    getAllServices();
+
+    // 4. Event Listeners
+    $("#serviceForm").on("submit", saveOrUpdateService);
+    $("#resetBtn").click(resetForm);
+});
+
+// ------------------ GET ALL SERVICES ------------------
+function getAllServices() {
+    $.ajax({
+        url: `${BASE_URL}/getAll`,
+        method: "GET",
+        success: function(response) {
+            const services = response.content || response;
+            let rows = "";
+            const noData = $("#noData");
+
+            if (services && services.length > 0) {
+                noData.addClass("d-none");
+                services.forEach(s => {
+                    // Define status badge styling
+                    const statusClass = s.status === 'ACTIVE' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary';
+
+                    rows += `
+                    <tr>
+                        <td class="ps-4 text-muted">#${s.id}</td>
+                        <td class="fw-bold">${s.serviceName}</td>
+                        <td>${parseFloat(s.price).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td><small>${s.description || 'No description'}</small></td>
+                        <td>
+                            <span class="badge ${statusClass} border px-2 py-1">
+                                ${s.status}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary me-1"
+                                    onclick="loadService(${s.id}, '${escapeQuotes(s.serviceName)}', ${s.price}, '${escapeQuotes(s.description)}', '${s.status}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteService(${s.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+            } else {
+                noData.removeClass("d-none").text("No packages found.");
+            }
+
+            $("#serviceTableBody").html(rows);
+        },
+        error: function(xhr) {
+            $("#noData").removeClass("d-none").text("Server error: " + xhr.status);
+        }
+    });
 }
 
-// Add or Update Service
-document.getElementById("serviceForm").addEventListener("submit", async (e) => {
+// ------------------ SAVE OR UPDATE ------------------
+function saveOrUpdateService(e) {
     e.preventDefault();
-    const id = document.getElementById("serviceId").value;
+
+    const serviceId = $("#serviceId").val();
     const serviceData = {
-        serviceName: document.getElementById("serviceName").value,
-        price: parseFloat(document.getElementById("price").value),
-        description: document.getElementById("description").value,
-        status: document.getElementById("status").value
+        serviceName: $("#serviceName").val(),
+        price: parseFloat($("#price").val()),
+        description: $("#description").val(),
+        status: $("#status").val()
     };
 
-    const endpoint = id ? `${API_BASE}/update/${id}` : `${API_BASE}/save`;
-    const method = id ? "PUT" : "POST";
+    // Determine if we are updating or saving
+    const isUpdate = !!serviceId;
+    const ajaxUrl = isUpdate ? `${BASE_URL}/update/${serviceId}` : `${BASE_URL}/save`;
+    const ajaxMethod = isUpdate ? "PUT" : "POST";
 
-    try {
-        const res = await fetch(endpoint, {
-            method: method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(serviceData)
+    if (isUpdate) serviceData.id = parseInt(serviceId);
+
+    $.ajax({
+        url: ajaxUrl,
+        method: ajaxMethod,
+        contentType: "application/json",
+        data: JSON.stringify(serviceData),
+        success: function() {
+            alert(`Package ${isUpdate ? 'updated' : 'saved'} successfully!`);
+            getAllServices();
+            resetForm();
+        },
+        error: function(xhr) {
+            alert("Operation failed: " + (xhr.responseText || "Unknown error"));
+        }
+    });
+}
+
+// ------------------ LOAD INTO FORM ------------------
+function loadService(id, serviceName, price, description, status) {
+    $("#serviceId").val(id);
+    $("#serviceName").val(serviceName);
+    $("#price").val(price);
+    $("#description").val(description);
+    $("#status").val(status);
+
+    // UI Update for Edit Mode
+    $("#saveBtn").html('<i class="fas fa-sync me-2"></i>Update Package')
+        .addClass("btn-primary").removeClass("btn-success");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ------------------ DELETE ------------------
+function deleteService(id) {
+    if(confirm(`Are you sure you want to delete package #${id}?`)) {
+        $.ajax({
+            url: `${BASE_URL}/delete/${id}`,
+            method: "DELETE",
+            success: function() {
+                alert("Package deleted!");
+                getAllServices();
+            },
+            error: function(xhr) {
+                alert("Failed to delete: " + xhr.responseText);
+            }
         });
-        const result = await res.json();
-        alert(result.message);
-        document.getElementById("resetBtn").click();
-        fetchServices();
-    } catch (error) {
-        console.error("Error saving service:", error);
-    }
-});
-
-// Reset form
-document.getElementById("resetBtn").addEventListener("click", () => {
-    document.getElementById("serviceId").value = "";
-    document.getElementById("serviceName").value = "";
-    document.getElementById("price").value = "";
-    document.getElementById("description").value = "";
-    document.getElementById("status").value = "ACTIVE";
-    document.getElementById("saveBtn").innerText = "Save Service";
-    document.getElementById("saveBtn").className = "btn btn-success btn-sm btn-action";
-    document.getElementById("formHeader").innerText = "Register New Service";
-});
-
-// Edit service
-async function editService(id) {
-    const res = await fetch(`${API_BASE}/getAll`);
-    const services = await res.json();
-    const service = services.find(s => s.id === id);
-    if(service) {
-        document.getElementById("serviceId").value = service.id;
-        document.getElementById("serviceName").value = service.serviceName;
-        document.getElementById("price").value = service.price;
-        document.getElementById("description").value = service.description || '';
-        document.getElementById("status").value = service.status;
-
-        document.getElementById("saveBtn").innerText = "Update Now";
-        document.getElementById("saveBtn").className = "btn btn-primary btn-sm btn-action";
-        document.getElementById("formHeader").innerText = "Update Service: " + service.serviceName;
     }
 }
 
-// Delete service
-async function deleteService(id) {
-    if(confirm("Are you sure?")) {
-        const res = await fetch(`${API_BASE}/delete/${id}`, { method: "DELETE" });
-        const result = await res.json();
-        alert(result.message);
-        fetchServices();
-    }
+// ------------------ HELPERS ------------------
+function resetForm() {
+    $("#serviceId").val("");
+    $("#serviceName, #price, #description").val("");
+    $("#status").val("ACTIVE");
+    $("#saveBtn").html('<i class="fas fa-save me-2"></i>Save Package')
+        .addClass("btn-success").removeClass("btn-primary");
 }
 
-// Initialize table on load
-fetchServices();
+function escapeQuotes(str) {
+    if (!str) return "";
+    return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+}
