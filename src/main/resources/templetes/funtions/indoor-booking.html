@@ -304,15 +304,31 @@
 
     async function triggerAutoEmail(data, bookingId = "New") {
         let subject = "", msg = "";
+
+        // Formatting the price for the email
+        const formattedPrice = parseFloat(data.price || 0).toLocaleString();
+
         if (data.status === 'BOOKED') {
             subject = "✨ Session Confirmed - Pahasara Studio";
-            msg = `Hello ${data.customerName},\n\nBooking #${bookingId} is confirmed for ${data.bookingDate} at ${data.startTime}.`;
+            msg = `Hello ${data.customerName},\n\n` +
+                `Great news! 📸 Your booking (#${bookingId}) for "Room 23" is officially confirmed.\n\n` +
+                `📅 Date: ${data.bookingDate}\n` +
+                `⏰ Time: ${data.startTime} - ${data.endTime}\n` +
+                `💰 Amount: Rs. ${formattedPrice}\n\n` +
+                `We are excited to capture some amazing moments with you! See you soon. 🕊️`;
+
         } else if (data.status === 'CANCELLED') {
-            subject = "Booking Update: Cancellation";
-            msg = `Hi ${data.customerName}, your booking for ${data.bookingDate} has been cancelled.`;
+            subject = "Update: Booking Cancellation 🗓️";
+            msg = `Hi ${data.customerName},\n\n` +
+                `This email is to confirm that your booking for ${data.bookingDate} has been cancelled. 🛑\n\n` +
+                `If this was a mistake or you'd like to reschedule for another time, please feel free to reach out to us. Hope to see you another time! 👋`;
+
         } else if (data.status === 'COMPLETED') {
-            subject = "❤️ Thank You - Pahasara Studio";
-            msg = `Dear ${data.customerName}, thank you for choosing Room 23! Your session is complete.`;
+            subject = "❤️ Thank You for Choosing Pahasara Studio";
+            msg = `Dear ${data.customerName},\n\n` +
+                `Thank you for choosing Room 23 for your session! 🌟 We truly enjoyed working with you.\n\n` +
+                `Your session is now marked as complete. ✅ We'll notify you as soon as your beautiful photos are ready for preview! 🎞️\n\n` +
+                `Best regards,\nTeam Pahasara`;
         }
 
         const formData = new FormData();
@@ -326,12 +342,11 @@
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
             });
-            showAlert("success", `Update saved and email sent to ${data.clientEmail}`);
+            showAlert("success", `Update saved and email sent to ${data.clientEmail} 📧`);
         } catch(err) {
-            showAlert("warning", "Saved, but email service failed.");
+            showAlert("warning", "Saved, but email service failed. ⚠️");
         }
     }
-
     async function saveBooking() {
         const dto = getFormData();
         try {

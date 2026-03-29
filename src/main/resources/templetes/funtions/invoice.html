@@ -13,6 +13,12 @@
 
     <style>
         body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; padding-bottom: 50px; }
+
+        /* Navigation Styling */
+        .navbar-custom { background-color: #212529; padding: 10px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav-link-custom { color: white !important; margin-left: 15px; font-weight: 500; transition: 0.3s; }
+        .nav-link-custom:hover { color: #c5a059 !important; }
+
         .main-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 30px; }
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
         .bg-paid { background-color: #d1e7dd; color: #0f5132; }
@@ -24,7 +30,6 @@
         .stats-card:hover { transform: translateY(-5px); }
         .income-icon { font-size: 2rem; opacity: 0.3; }
 
-        /* Custom Responsive Adjustments */
         @media (max-width: 1024px) {
             .container { padding: 20px 4%; }
         }
@@ -44,7 +49,6 @@
             .btn-group-mobile { display: flex; flex-direction: column; }
         }
 
-        /* Hide ID column on very small screens to save space */
         @media (max-width: 375px) {
             .hide-xs { display: none; }
         }
@@ -52,15 +56,38 @@
 </head>
 <body>
 
-<div class="container py-4 py-md-5">
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="dashboard.html">📸 PAHASARA STUDIO</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link nav-link-custom" href="dashboard.html"><i class="fas fa-home me-1"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link nav-link-custom" href="booking.html"><i class="fas fa-calendar-check me-1"></i> Bookings</a></li>
+                <li class="nav-item"><a class="nav-link nav-link-custom" href="payment.html"><i class="fas fa-credit-card me-1"></i> Payments</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
     <div id="alertPlaceholder"></div>
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3 header-flex">
-        <a href="dashboard.html" class="btn btn-outline-primary btn-sm w-auto">
-            <i class="fas fa-arrow-left me-1"></i> Dashboard
-        </a>
+        <div class="btn-group">
+            <a href="booking.html" class="btn btn-outline-dark btn-sm">
+                <i class="fas fa-calendar-alt me-1"></i> View Bookings
+            </a>
+            <a href="payment.html" class="btn btn-outline-dark btn-sm">
+                <i class="fas fa-receipt me-1"></i> View Payments
+            </a>
+        </div>
+
         <h2 class="fw-bold mb-0">💰 Financial Overview</h2>
-        <div class="filter-section d-flex align-items-center bg-white p-2 rounded shadow-sm">
+
+        <div class="filter-section d-flex align-items-center bg-white p-2 rounded shadow-sm border">
             <label class="me-2 fw-bold text-muted small text-uppercase mb-0">Month:</label>
             <input type="month" id="monthPicker" class="form-control form-control-sm border-0" onchange="getAllInvoices()">
         </div>
@@ -187,7 +214,9 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Existing script content remains identical...
     const BASE_URL = "http://localhost:8080/api/v1/invoices";
     const BOOKING_URL = "http://localhost:8080/api/v1/bookings";
     const EMAIL_URL = "http://localhost:8080/api/v1/email/send";
@@ -321,15 +350,15 @@
     document.getElementById('invoiceForm').addEventListener('submit', async function(e){
         e.preventDefault();
         const dto = getFormData();
-        try{
-            const data = await authorizedFetch(`${BASE_URL}/save`,{method:'POST',body:JSON.stringify(dto)});
-            if(data.code==="00"){
-                await triggerInvoiceEmail(dto);
-                showAlert("success","Invoice Saved!");
+        try {
+            const response = await authorizedFetch(`${BASE_URL}/save`, { method: 'POST', body: JSON.stringify(dto) });
+            if (response.code === "00") {
+                showAlert("success", "Invoice Saved Successfully!");
                 resetUI();
                 getAllInvoices();
-            }
-        }catch(err){ showAlert("danger","Save failed."); }
+                triggerInvoiceEmail(dto).catch(err => console.error("Email notification failed"));
+            } else { showAlert("danger", "Error: " + response.message); }
+        } catch(err) { showAlert("danger", "Server connection failed."); }
     });
 
     async function updateInvoice(){
@@ -370,10 +399,8 @@
 
     async function deleteInvoice(id){
         if(confirm("Delete this invoice?")){
-            try {
-                await authorizedFetch(`${BASE_URL}/delete/${id}`,{method:'DELETE'});
-                getAllInvoices();
-            } catch(e) { showAlert("danger", "Delete failed."); }
+            try { await authorizedFetch(`${BASE_URL}/delete/${id}`,{method:'DELETE'}); getAllInvoices(); }
+            catch(e) { showAlert("danger", "Delete failed."); }
         }
     }
 
@@ -382,31 +409,76 @@
         if(data.code==="00") downloadPDF(data.content);
     }
 
-    function downloadPDF(inv){
+    function downloadPDF(inv) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const balance = inv.totalAmount - inv.paidAmount;
-        doc.setFontSize(20);
-        doc.text("PAHASARA STUDIO - RECEIPT", 105, 20, null, null, "center");
+        const balance = (inv.totalAmount - inv.paidAmount).toFixed(2);
+        doc.setFillColor(33, 37, 41);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont("helvetica", "bold");
+        doc.text("📸 PAHASARA STUDIO", 105, 20, { align: "center" });
+        doc.setFontSize(10);
+        doc.text("Official Payment Receipt & Invoice", 105, 30, { align: "center" });
+        doc.setTextColor(0, 0, 0);
         doc.setFontSize(12);
-        doc.text(`Invoice No: ${inv.invoiceNumber}`, 20, 40);
-        doc.text(`Total Amount: LKR ${inv.totalAmount}`, 20, 50);
-        doc.text(`Paid Amount: LKR ${inv.paidAmount}`, 20, 60);
-        doc.text(`Balance Due: LKR ${balance.toFixed(2)}`, 20, 70);
-        doc.text(`Status: ${inv.paymentStatus}`, 20, 80);
-        doc.save(`${inv.invoiceNumber}.pdf`);
+        doc.text(`📅 Date: ${inv.date}`, 20, 55);
+        doc.text(`📄 Invoice #: ${inv.invoiceNumber}`, 20, 63);
+        doc.text(`🆔 Booking ID: #${inv.bookingId}`, 20, 71);
+        doc.setLineWidth(0.5);
+        doc.line(20, 78, 190, 78);
+        doc.setFont("helvetica", "bold");
+        doc.text("Description", 20, 90);
+        doc.text("Amount (LKR)", 190, 90, { align: "right" });
+        doc.setFont("helvetica", "normal");
+        doc.line(20, 93, 190, 93);
+        doc.text("Photography/Videography Services", 20, 105);
+        doc.text(`${inv.totalAmount.toLocaleString()}`, 190, 105, { align: "right" });
+        doc.setFillColor(245, 245, 245);
+        doc.rect(120, 115, 70, 40, 'F');
+        doc.setFontSize(11);
+        doc.text(`Subtotal:`, 125, 125);
+        doc.text(`${inv.totalAmount.toLocaleString()}`, 185, 125, { align: "right" });
+        doc.setTextColor(40, 167, 69);
+        doc.text(`Paid Amount:`, 125, 133);
+        doc.text(`- ${inv.paidAmount.toLocaleString()}`, 185, 133, { align: "right" });
+        doc.setTextColor(220, 53, 69);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Balance Due:`, 125, 145);
+        doc.text(`LKR ${balance}`, 185, 145, { align: "right" });
+        const statusColor = inv.paymentStatus === 'PAID' ? [209, 231, 221] : [248, 215, 218];
+        const statusText = inv.paymentStatus === 'PAID' ? "✨ FULLY PAID" : "⏳ PENDING";
+        doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+        doc.roundedRect(20, 120, 45, 10, 2, 2, 'F');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.text(statusText, 42.5, 126.5, { align: "center" });
+        doc.setTextColor(150, 150, 150);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+        doc.text("Thank you for choosing Pahasara Studio! ✨", 105, 180, { align: "center" });
+        doc.text("This is a computer-generated document.", 105, 185, { align: "center" });
+        doc.save(`Invoice_${inv.invoiceNumber}.pdf`);
     }
 
-    async function triggerInvoiceEmail(dto){
+    async function triggerInvoiceEmail(dto) {
         const email = document.getElementById('displayCust').innerText;
-        if(!email || email==="--" || email==="N/A") return;
+        const serviceName = document.getElementById('displayServ').innerText;
+        if (!email || email === "--" || email === "N/A" || !email.includes('@')) return;
+        const balance = (dto.totalAmount - dto.paidAmount).toFixed(2);
+        const emailMessage = `🌟 Hello from Pahasara Studio! 🌟\n\nThank you for choosing us. Here is your invoice update for "${serviceName}".\n\n------------------------------------------\n📄 Invoice No: ${dto.invoiceNumber}\n💰 Total Amount: LKR ${dto.totalAmount.toLocaleString()}\n💵 Amount Paid: LKR ${dto.paidAmount.toLocaleString()}\n⚖️ Remaining Balance: LKR ${balance}\n📌 Status: ${dto.paymentStatus}\n------------------------------------------\n\n${dto.paymentStatus === 'PAID' ? "✨ High five! Your invoice is fully settled. Thank you so much! 🙌" : "🔔 This is a friendly reminder regarding your outstanding balance."}\n\nBest regards,\nThe Pahasara Studio Team 🎨`;
         const formData = new FormData();
         formData.append("toEmail", email);
-        formData.append("subject", `Invoice Update: ${dto.invoiceNumber}`);
-        formData.append("message", `Total: LKR ${dto.totalAmount}\nPaid: LKR ${dto.paidAmount}\nStatus: ${dto.paymentStatus}`);
-        try{
-            await fetch(EMAIL_URL,{method:"POST",headers:{'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`},body: formData});
-        }catch(err){ console.error("Email failed", err); }
+        formData.append("subject", `✨ Invoice Update: ${dto.invoiceNumber} - Pahasara Studio`);
+        formData.append("message", emailMessage);
+        try {
+            await fetch(EMAIL_URL, {
+                method: "POST",
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` },
+                body: formData
+            });
+        } catch (err) { console.error("❌ Email failed to send", err); }
     }
 </script>
 </body>

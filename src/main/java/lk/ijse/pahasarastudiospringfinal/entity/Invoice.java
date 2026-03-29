@@ -30,8 +30,9 @@ public class Invoice {
     @Column(nullable = false)
     private double paidAmount; // Added this field
 
+    // In Invoice.java
     @Column(nullable = false)
-    private String status = "UNPAID";
+    private String paymentStatus = "UNPAID"; // Rename from 'status' to 'paymentStatus'
 
     @OneToOne
     @JoinColumn(name = "booking_id", referencedColumnName = "id", nullable = false)
