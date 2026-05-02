@@ -31,13 +31,20 @@ public class Invoice {
     private double paidAmount; // Added this field
 
     // In Invoice.java
-    @Column(nullable = false)
-    private String paymentStatus = "UNPAID"; // Rename from 'status' to 'paymentStatus'
-
+// In Invoice.java
+    @Column(name = "status", nullable = false) // Map Java 'paymentStatus' to DB 'status'
+    private String paymentStatus = "UNPAID";
     @OneToOne
     @JoinColumn(name = "booking_id", referencedColumnName = "id", nullable = false)
     private Booking booking;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Payment> payments;
+
+    public String getStatus() {
+        return "";
+    }
+
+    public void setStatus(String s) {
+    }
 }
